@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TopShop | Все товары</title>
+  </head>
+
+  <body>
+    <h1>Наши товары</h1>
+    <ul>
+      {% for product in products %}
+      <div class="post-container" style="background-color: rgb(74, 151, 74); color: white; border: 1px solid black; margin-bottom: 10px; padding: 15px;">
+        <strong>{{ product.name }}</strong> — {{ product.price }} руб.
+        <p>{{ product.description }}</p>
+      </div>
+      {% empty %}
+      <div>Товаров пока нет.</div>
+      {% endfor %}
+    </ul>
+  </body>
+  
+</html>
