@@ -1,18 +1,9 @@
-<!doctype html>
-<html lang="ru">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TopShop | {{ product.name }}</title>
-  </head>
+{% extends "shop/base.html" %}
 
-  <body>
-    <header>
-      <nav>
-        <a href="{% url 'shop:home_page' %}"> Главная </a>
-        <a href="{% url 'shop:product_list' %}"> Товары </a>
-      </nav>
-    </header>
+{% block page_title %}TopShop | {{ product.name }}
+{% endblock page_title %}
+
+{% block page_content %}
 
     <a href="javascript:history.back()">&larr; Назад</a>
 
@@ -29,5 +20,4 @@
   {% endif %}
 </p>
 <p><strong>Добавлен:</strong> {{ product.created_at|date:"d.m.Y" }}</p>
-  </body>
-</html>
+{% endblock page_content %}

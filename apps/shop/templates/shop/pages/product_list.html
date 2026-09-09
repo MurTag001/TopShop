@@ -1,19 +1,9 @@
-<!doctype html>
-<html lang="ru">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TopShop | Все товары</title>
-  </head>
+{% extends "shop/base.html" %}
 
-  <body>
+{% block page_title %}TopShop | Все товары{% endblock page_title %}
 
-    <nav>
-      <a href={% url 'shop:home_page' %}> Главная </a>
-      <a href={% url 'shop:product_list' %}> Товары </a>
-    </nav>
-
-    <h1>Наши товары</h1>
+{% block page_content %}
+  <h1>Наши товары</h1>
     <ul>
       {% for product in products %}
       <div class="shop-container" style="background-color: rgb(74, 151, 74); color: white; border: 1px solid black; margin-bottom: 10px; padding: 15px;">
@@ -25,6 +15,4 @@
       <div>Товаров пока нет.</div>
       {% endfor %}
     </ul>
-  </body>
-  
-</html>
+{% endblock page_content %}
