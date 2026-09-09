@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TopShop | {{ product.name }}</title>
+  </head>
+
+  <body>
+    <header>
+      <nav>
+        <a href="{% url 'shop:home_page' %}"> Главная </a>
+        <a href="{% url 'shop:product_list' %}"> Товары </a>
+      </nav>
+    </header>
+
+    <a href="javascript:history.back()">&larr; Назад</a>
+
+<h1>Описание товара</h1>
+<h2>ID товара: {{ product.id }}</h2>
+<h3>{{ product.name }}</h3>
+<p><strong>Характеристики:</strong> {{ product.description }}</p>
+<p><strong>Цена:</strong> {{ product.price|floatformat:2 }} руб.</p>
+<p><strong>Статус:</strong> 
+  {% if product.stock > 0 %}
+    В наличии ({{ product.stock }} шт.)
+  {% else %}
+    <span style="color: red;">Нет в наличии</span>
+  {% endif %}
+</p>
+<p><strong>Добавлен:</strong> {{ product.created_at|date:"d.m.Y" }}</p>
+  </body>
+</html>
