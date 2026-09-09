@@ -7,7 +7,7 @@
 {% block page_content %}
   <h1>Новый товар</h1>
 
-  <form method="POST">
+  <form method="POST" novalidate>
     {% csrf_token %}
 
     <div>
@@ -16,14 +16,24 @@
         id="titleInput"
         name="name"
         type="text"
+        value="{{ name }}"
         placeholder="Максимальная длина 200 символов"
         required
       >
+    {% if errors.name %}
+        <div style="color: red; font-size: 12px;">{{ errors.name }}</div>
+      {% endif %}
     </div>
 
     <div>
       <label for="textInput">Описание:</label>
-      <textarea id="textInput" name="description" rows="3"></textarea>
+      <textarea
+        id="textInput"
+        name="description"
+        rows="3">{{ description }}</textarea>
+      {% if errors.description %}
+        <div style="color: red; font-size: 12px;">{{ errors.description }}</div>
+      {% endif %}
     </div>
 
     <div>
@@ -31,12 +41,16 @@
       <input
         id="priceInput"
         name="price"
+        value="{{ price }}"
         type="number"
         step="0.01"
         min="0"
         placeholder="0.00"
         required
       >
+    {% if errors.price %}
+        <div style="color: red; font-size: 12px;">{{ errors.price }}</div>
+      {% endif %}
     </div>
 
     <div>
@@ -44,11 +58,15 @@
       <input
         id="stockInput"
         name="stock"
+        value="{{ stock }}"
         type="number"
         min="0"
         placeholder="0"
         required
       >
+    {% if errors.stock %}
+        <div style="color: red; font-size: 12px;">{{ errors.stock }}</div>
+      {% endif %}
     </div>
 
     <button type="submit">Добавить</button>

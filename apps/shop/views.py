@@ -19,13 +19,40 @@ def product_add_view(request):
         return render(request, 'shop/pages/product_add.html')
 
     elif request.method == "POST":
-        
+                
+        name=request.POST['name'].strip()
+        description=request.POST['description'].strip()
+        price=request.POST['price'].strip()
+        stock=request.POST['stock'].strip()
         is_active = 'is_active' in request.POST
 
+        errors = {}
+        if not name:
+            errors['name'] = 'Наименование товара обязателено к заполнению.'
+        if not description:
+            errors['description'] = 'Описание товара обязателено к заполнению.'
+        if not price:
+            errors['price'] = 'Цена обязателена к заполнению.'
+        if not stock:
+            errors['stock'] = 'Количество товара обязателено к заполнению.'
+
+        if errors:
+            context = {
+                'errors': errors,
+                'name': name,
+                'description': description,
+                'price': price,
+                'stock': stock,
+                'is_active': is_active
+            }
+            return render(request, 'shop/pages/product_add.html', context)
+
         product = Product.objects.create(
-            name=request.POST['name'],
-            description=request.POST['description'],
-            price=request.POST['price'],
-            stock=request.POST['stock']
+            name=name,
+            description=description,
+            price=price,
+            stock=stock,
+            is_active=is_active
         )
+
         return redirect('shop:product_detail', product_id=product.id)
