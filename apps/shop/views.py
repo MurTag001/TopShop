@@ -15,11 +15,8 @@ def shop_detail_view(request, product_id):
 
 
 def product_add_view(request):
-    if request.method == "GET":
-        return render(request, 'shop/pages/product_add.html')
-
-    elif request.method == "POST":
-                
+    if request.method == "POST":
+                        
         name=request.POST['name'].strip()
         description=request.POST['description'].strip()
         price=request.POST['price'].strip()
@@ -29,10 +26,23 @@ def product_add_view(request):
         errors = {}
         if not name:
             errors['name'] = 'Наименование товара обязателено к заполнению.'
+        elif len(name) < 6:
+            errors['name'] = 'Наименование должно содержать минимум 6 символов.'
+        elif len(name) > 200:
+            errors['name'] = 'Наименование не должно превышать 200 символов.'
+
         if not description:
             errors['description'] = 'Описание товара обязателено к заполнению.'
+
         if not price:
             errors['price'] = 'Цена обязателена к заполнению.'
+        else:
+            try:
+                if float(price) <= 0:
+                    errors['price'] = 'Цена должна быть строго больше 0.'
+            except ValueError:
+                errors['price'] = 'Введите корректное числовое значение для цены.'
+
         if not stock:
             errors['stock'] = 'Количество товара обязателено к заполнению.'
 
@@ -56,3 +66,5 @@ def product_add_view(request):
         )
 
         return redirect('shop:product_detail', product_id=product.id)
+
+    return render(request, 'shop/pages/product_add.html')
