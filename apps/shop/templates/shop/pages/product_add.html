@@ -10,66 +10,7 @@
   <form method="POST" novalidate>
     {% csrf_token %}
 
-    <div>
-      <label for="titleInput">Наименование:</label>
-      <input
-        id="titleInput"
-        name="name"
-        type="text"
-        value="{{ name }}"
-        placeholder="Длина от 6 до 200 символов"
-        minlength="6"
-        maxlength="200"
-        required
-      >
-    {% if errors.name %}
-        <div style="color: red; font-size: 12px;">{{ errors.name }}</div>
-      {% endif %}
-    </div>
-
-    <div>
-      <label for="textInput">Описание:</label>
-      <textarea
-        id="textInput"
-        name="description"
-        rows="3">{{ description }}</textarea>
-      {% if errors.description %}
-        <div style="color: red; font-size: 12px;">{{ errors.description }}</div>
-      {% endif %}
-    </div>
-
-    <div>
-      <label for="priceInput">Цена:</label>
-      <input
-        id="priceInput"
-        name="price"
-        value="{{ price }}"
-        type="number"
-        step="0.01"
-        min="0"
-        placeholder="0.00"
-        required
-      >
-    {% if errors.price %}
-        <div style="color: red; font-size: 12px;">{{ errors.price }}</div>
-      {% endif %}
-    </div>
-
-    <div>
-      <label for="stockInput">Количество на складе:</label>
-      <input
-        id="stockInput"
-        name="stock"
-        value="{{ stock }}"
-        type="number"
-        min="0"
-        placeholder="0"
-        required
-      >
-    {% if errors.stock %}
-        <div style="color: red; font-size: 12px;">{{ errors.stock }}</div>
-      {% endif %}
-    </div>
+    {{ form }}
 
     <button type="submit">Добавить</button>
   </form>
