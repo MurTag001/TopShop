@@ -24,3 +24,18 @@ def product_add_view(request):
             return redirect('shop:product_detail', product_id=product.id)
         
     return render(request, 'shop/pages/product_add.html', {"form": form})
+
+
+def product_edit_view(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+
+    if request.method == "POST":
+        form = ProductForm(request.POST, instance=product)
+
+        if form.is_valid():
+            form.save()
+            return redirect("shop:product_detail", product_id=product.id)
+        return render(request, 'shop/pages/product_edit.html', context={"form": form})
+
+    form = ProductForm(instance=product)
+    return render(request, 'shop/pages/product_edit.html', context={"form": form})

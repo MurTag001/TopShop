@@ -20,4 +20,7 @@
   {% endif %}
 </p>
 <p><strong>Добавлен:</strong> {{ product.created_at|date:"d.m.Y" }}</p>
+
+<a href="{% url 'shop:product_edit' product_id=product.id %}">Редактировать</a>
+
 {% endblock page_content %}
