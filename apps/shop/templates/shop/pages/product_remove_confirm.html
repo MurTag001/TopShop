@@ -1,0 +1,16 @@
+{% extends "shop/base.html" %}
+
+{% block page_title %}
+  TopShop | Подтверждение удаления товара
+{% endblock page_title %}
+
+{% block page_content %}
+  <h1>Подтверждение</h1>
+  <p>Вы уверены, что хотите удалить позицию "<strong>{{ product.name }}</strong>"?</p>
+
+  <form method="POST">
+    {% csrf_token %}
+    <button type="submit">Да, удалить</button>
+  </form>
+  <a href="{% url 'shop:product_detail' product.id %}">Отмена</a>
+{% endblock page_content %}

@@ -51,3 +51,13 @@ def product_edit_view(request, product_id):
 
     form = ProductForm(instance=product)
     return render(request, 'shop/pages/product_form.html', context={"form": form, **extra_context,})
+
+
+def product_remove_view(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+
+    if request.method == "POST":
+        product.delete()
+        return redirect("shop:product_list")
+
+    return render(request, 'shop/pages/product_remove_confirm.html', {'product': product})
