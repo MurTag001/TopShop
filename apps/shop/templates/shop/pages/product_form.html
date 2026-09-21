@@ -1,11 +1,11 @@
 {% extends "shop/base.html" %}
 
 {% block page_title %}
-  TopShop | Редактировать позицию
+  TopShop | {{ title }}
 {% endblock page_title %}
 
 {% block page_content %}
-  <h1>Редактирование</h1>
+  <h1>{{ h1 }}</h1>
 
   <form method="POST" novalidate>
     {% csrf_token %}
@@ -18,6 +18,6 @@
       </div>
     {% endfor %}
 
-    <button type="submit">Сохранить</button>
+    <button type="submit">{{ submit_button_text }}</button>
   </form>
 {% endblock page_content %}
