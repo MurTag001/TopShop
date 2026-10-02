@@ -1,6 +1,7 @@
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.shortcuts import render, redirect
+from django.views.decorators.http import require_POST
 
 
 def register_view(request):
@@ -23,3 +24,8 @@ def login_view(request):
       return redirect("shop:home_page")
 
   return render(request, 'users/pages/login.html', {'form': form})
+
+@require_POST
+def logout_view(request):
+  logout(request)
+  return redirect("shop:home_page")

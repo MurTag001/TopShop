@@ -41,6 +41,15 @@
               <li class="nav-item">
                 <a class="nav-link disabled" href="#">Привет, {{ request.user }}</a>
               </li>
+              <li class="nav-item">
+                <form class="nav-link" method="POST" action="{% url 'users:logout' %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn text-muted border-0 p-0">
+                    {% bs_icon 'box-arrow-left' extra_classes='me-1' %}
+                    Выйти
+                  </button>
+                </form>
+              </li>
             {% else %}
               <li class="nav-item">
                 <a class="nav-link" href="{% url 'users:login' %}">
