@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from .models import Product
 from shop.forms import ProductForm
@@ -15,6 +16,7 @@ def shop_detail_view(request, product_id):
     return render(request, 'shop/pages/product_detail.html', {'product': product})
 
 
+@login_required
 def product_add_view(request):
     form = ProductForm(request.POST or None)
     if request.method == "POST":

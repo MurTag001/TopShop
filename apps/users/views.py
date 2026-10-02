@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.shortcuts import render, redirect
@@ -21,7 +22,8 @@ def login_view(request):
   if request.method == "POST":
     if form.is_valid():
       login(request, form.get_user())
-      return redirect("shop:home_page")
+      next_url = request.GET.get('next', settings.DEFAULT_LOGIN_REDIRECT_URL)
+      return redirect(next_url)
 
   return render(request, 'users/pages/login.html', {'form': form})
 
