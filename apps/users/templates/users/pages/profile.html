@@ -15,6 +15,21 @@
     <p><strong>Имя:</strong> {{ user.first_name }}</p>
     <p><strong>Фамилия:</strong> {{ user.last_name }}</p>
 
+    <h2>Мои товары на продажу</h2>
+{% if user.products.all %}
+    <div class="list-group">
+        {% for product in user.products.all %}
+            <div class="list-group-item">
+                <h5>{{ product.name }}</h5>
+                <p>Цена: {{ product.price }} руб.</p>
+                <a href="{% url 'shop:product_detail' product.id %}" class="btn btn-sm btn-primary">Посмотреть</a>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p>Вы еще не добавили ни одного товара.</p>
+{% endif %}
+
     <form action="{% url 'users:logout' %}" method="post">
         {% csrf_token %}
         <button type="submit">Выйти из аккаунта</button>

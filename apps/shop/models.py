@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 
 
 class Product(models.Model):
@@ -8,6 +9,13 @@ class Product(models.Model):
     stock = models.IntegerField(default=0, verbose_name="Остаток на складе")
     is_active = models.BooleanField(default=True, verbose_name="Доступен для продажи")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата добавления")
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='products',
+        verbose_name="Владелец товара"
+    )
+
 
     class Meta:
         verbose_name = "Товар"
