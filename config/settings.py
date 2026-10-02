@@ -46,6 +46,7 @@ INSTALLED_APPS = [
 
     # Собственные
     'shop',
+    'users',
 ]
 
 MIDDLEWARE = [
