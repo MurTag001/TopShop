@@ -37,12 +37,24 @@
             </li>
           </ul>
           <ul class="navbar-nav">
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'users:register' %}">
+            {% if request.user.is_authenticated %}
+              <li class="nav-item">
+                <a class="nav-link disabled" href="#">Привет, {{ request.user }}</a>
+              </li>
+            {% else %}
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'users:login' %}">
+                  {% bs_icon 'door-closed' extra_classes='me-1' %}
+                  Войти
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'users:register' %}">
                 {% bs_icon 'person-add' extra_classes='me-1' %}
                 Регистрация
-              </a>
-            </li>
+                </a>
+              </li>
+            {% endif %}
           </ul>
         </div>
       </div>
