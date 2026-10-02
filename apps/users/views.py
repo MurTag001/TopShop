@@ -3,6 +3,8 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_POST
+from django.views.generic import TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
 def register_view(request):
@@ -31,3 +33,7 @@ def login_view(request):
 def logout_view(request):
   logout(request)
   return redirect("shop:home_page")
+
+
+class ProfileView(LoginRequiredMixin, TemplateView):
+    template_name = 'users/pages/profile.html'

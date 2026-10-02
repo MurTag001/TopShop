@@ -141,4 +141,4 @@ MAILERS = {
 # Auth
 
 LOGIN_URL = 'users:login'
-DEFAULT_LOGIN_REDIRECT_URL = 'shop:home_page'
+DEFAULT_LOGIN_REDIRECT_URL = 'users:profile'

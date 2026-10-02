@@ -1,0 +1,24 @@
+{% extends "shop/base.html" %}
+{% load django_bootstrap5 %}
+
+{% block page_title %}
+  TopShop | Личный кабинет
+{% endblock page_title %}
+
+{% block page_content %}
+  <form method="POST">
+    {% csrf_token %}
+
+    <h1>Личный кабинет пользователя</h1>
+    <p><strong>Логин:</strong> {{ user.username }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Имя:</strong> {{ user.first_name }}</p>
+    <p><strong>Фамилия:</strong> {{ user.last_name }}</p>
+
+    <form action="{% url 'users:logout' %}" method="post">
+        {% csrf_token %}
+        <button type="submit">Выйти из аккаунта</button>
+    </form>
+
+
+{% endblock page_content %}
