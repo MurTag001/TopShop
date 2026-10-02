@@ -1,12 +1,17 @@
 {% extends "shop/base.html" %}
+{% load static %}
 
 {% block page_title %}TopShop | Все товары{% endblock page_title %}
+
+{% block styles %}
+  <link rel="stylesheet" href="{% static 'shop/css/pages/product_list.css' %}">
+{% endblock styles %}
 
 {% block page_content %}
   <h1>Наши товары</h1>
     <ul>
       {% for product in products %}
-      <div class="shop-container" style="background-color: rgb(74, 151, 74); color: white; border: 1px solid black; margin-bottom: 10px; padding: 15px;">
+      <div class="product-container"> 
         <a href="{% url 'shop:product_detail' product_id=product.id %}">
            <strong>{{ product.name }}</strong></a> — {{ product.price }} руб.
         <p>{{ product.description }}</p>
