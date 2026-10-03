@@ -41,6 +41,9 @@ def product_add_view(request):
 def product_edit_view(request, product_id):
     product = get_object_or_404(Product, id=product_id)
 
+    if request.user != product.owner:
+        return render(request, 'shop/pages/not_allowed.html')
+    
     extra_context = {
         "title": "Редактировать позицию",
         "h1": "Редактирование",
