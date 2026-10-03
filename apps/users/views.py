@@ -1,11 +1,12 @@
 from django.conf import settings
-from django.contrib.auth import login, logout
+from django.contrib.auth import login, logout, get_user_model
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
-from django.views.generic import TemplateView
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import DetailView
+from shop.models import Product
 
+User = get_user_model()
 
 def register_view(request):
   form = UserCreationForm(request.POST or None)
@@ -35,5 +36,20 @@ def logout_view(request):
   return redirect("shop:home_page")
 
 
-class ProfileView(LoginRequiredMixin, TemplateView):
+class ProfileView(DetailView):
+    model = User
     template_name = 'users/pages/profile.html'
+    context_object_name = 'profile_user'
+
+
+    def get_object(self, queryset=None):
+        username = self.kwargs.get("username")
+        return get_object_or_404(User, username=username)
+
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        profile_user = self.get_object()
+        context['products_list'] = Product.objects.filter(owner=profile_user)
+        
+        return context

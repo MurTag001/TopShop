@@ -21,7 +21,11 @@
 </p>
 <p><strong>Добавлен:</strong> {{ product.created_at|date:"d.m.Y" }}</p>
 
-<p>Продавец: {{ product.owner }}</p>
+<p>Продавец: 
+   <a href="{% url "users:profile" username=product.owner.username %}">
+      {{ product.owner.username }}
+   </a>
+</p>
 
 {% if request.user == product.owner %}
 <a href="{% url 'shop:product_edit' product_id=product.id %}">Редактировать</a>

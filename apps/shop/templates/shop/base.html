@@ -39,7 +39,10 @@
           <ul class="navbar-nav">
             {% if request.user.is_authenticated %}
               <li class="nav-item">
-                <a class="nav-link" href="{% url 'users:profile' %}">Привет, {{ request.user }}</a>
+                <a class="nav-link" href="{% url "users:profile" username=request.user.username %}">
+                  {% bs_icon 'person' extra_classes='me-1' %}
+                  {{ request.user }}
+                </a>
               </li>
               <li class="nav-item">
                 <form class="nav-link" method="POST" action="{% url 'users:logout' %}">

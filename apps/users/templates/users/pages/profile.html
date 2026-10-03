@@ -1,39 +1,39 @@
 {% extends "shop/base.html" %}
 {% load django_bootstrap5 %}
+{% load static %}
 
 {% block page_title %}
   TopShop | Личный кабинет
 {% endblock page_title %}
 
+{% block styles %}
+  <link rel="stylesheet" href="{% static 'users/css/pages/profile.css' %}">
+{% endblock styles %}
+
 {% block page_content %}
   <form method="POST">
     {% csrf_token %}
 
+  <div class="profile-container">
     <h1>Личный кабинет пользователя</h1>
-    <p><strong>Логин:</strong> {{ user.username }}</p>
-    <p><strong>Email:</strong> {{ user.email }}</p>
-    <p><strong>Имя:</strong> {{ user.first_name }}</p>
-    <p><strong>Фамилия:</strong> {{ user.last_name }}</p>
+    <p><strong>Логин:</strong> {{ profile_user.username }}</p>
+    <p><strong>Email:</strong> {{ profile_user.email }}</p>
+    <p><strong>Имя:</strong> {{ profile_user.first_name }}</p>
+    <p><strong>Фамилия:</strong> {{ profile_user.last_name }}</p>
 
-    <h2>Мои товары на продажу</h2>
-{% if user.products.all %}
-    <div class="list-group">
-        {% for product in user.products.all %}
-            <div class="list-group-item">
-                <h5>{{ product.name }}</h5>
-                <p>Цена: {{ product.price }} руб.</p>
-                <a href="{% url 'shop:product_detail' product.id %}" class="btn btn-sm btn-primary">Посмотреть</a>
-            </div>
-        {% endfor %}
-    </div>
-{% else %}
-    <p>Вы еще не добавили ни одного товара.</p>
-{% endif %}
-
-    <form action="{% url 'users:logout' %}" method="post">
-        {% csrf_token %}
-        <button type="submit">Выйти из аккаунта</button>
-    </form>
-
-
+    <h2>Товары на продажу</h2>
+         {% if products_list %}
+        <div class="list-group">
+            {% for product in products_list %}
+                <div class="list-group-item">
+                    <h5>{{ product.name }}</h5>
+                    <p>Цена: {{ product.price }} руб.</p>
+                    <a href="{% url 'shop:product_detail' product.pk %}" class="btn btn-sm btn-primary">Посмотреть</a>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="mb-4">Этот пользователь еще не добавил ни одного товара.</p>
+    {% endif %}
+  </div>
 {% endblock page_content %}
