@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     # Установленные
     'django_bootstrap5',
     'django_bootstrap_icons',
+    'django_extensions',
 
     # Собственные
     'shop',
@@ -142,3 +143,4 @@ MAILERS = {
 
 LOGIN_URL = 'users:login'
 DEFAULT_LOGIN_REDIRECT_URL = 'users:profile'
+SHELL_PLUS = "ipython"
