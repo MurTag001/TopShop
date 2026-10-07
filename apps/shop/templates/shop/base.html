@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
   {% block styles %}{% endblock styles %}
   {% bootstrap_javascript %}
+  <script src="{% static 'js/base.js' %}" type="module" defer></script>
 </head>
 
 <body>
@@ -53,7 +54,7 @@
                   </button>
                 </form>
               </li>
-            {% else %}
+              {% else %}
               <li class="nav-item">
                 <a class="nav-link" href="{% url 'users:login' %}">
                   {% bs_icon 'door-closed' extra_classes='me-1' %}
@@ -70,11 +71,16 @@
           </ul>
         </div>
       </div>
+    </nav>
   </header>
 
   <main>{% block page_content %}{% endblock page_content %}</main>
 
 <footer>&copy; Все права защищены 2026</footer>
+
+<button id="scrollToTopBtn" class="scroll-to-top disabled">
+    {% bs_icon 'arrow-up' size="25px" %}
+</button>
 
 </body>
 </html>
