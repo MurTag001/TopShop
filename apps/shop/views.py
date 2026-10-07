@@ -1,9 +1,9 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from .models import Product
-from shop.forms import ProductForm
+from .forms import ProductForm
 
-def home_page_view (request):
+def home_page_view(request):
     return render(request, 'shop/pages/index.html')
 
 def product_list_view(request):
@@ -37,7 +37,7 @@ def product_add_view(request):
             "submit_button_text": "Добавить",
         })
 
-
+@login_required
 def product_edit_view(request, product_id):
     product = get_object_or_404(Product, id=product_id)
 
@@ -51,19 +51,22 @@ def product_edit_view(request, product_id):
     }
 
     if request.method == "POST":
-        form = ProductForm(request.POST,  request.FILES or None, instance=product)
-
+        form = ProductForm(request.POST, request.FILES, instance=product)
         if form.is_valid():
             form.save()
             return redirect("shop:product_detail", product_id=product.id)
-        return render(request, 'shop/pages/product_form.html', context={"form": form, **extra_context,})
+        return render(request, 'shop/pages/product_form.html', context={"form": form, **extra_context})
 
     form = ProductForm(instance=product)
-    return render(request, 'shop/pages/product_form.html', context={"form": form, **extra_context,})
+    return render(request, 'shop/pages/product_form.html', context={"form": form, **extra_context})
 
 
+@login_required
 def product_remove_view(request, product_id):
     product = get_object_or_404(Product, id=product_id)
+
+    if request.user != product.owner:
+        return render(request, 'shop/pages/not_allowed.html')
 
     if request.method == "POST":
         product.delete()
