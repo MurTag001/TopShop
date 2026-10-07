@@ -11,8 +11,8 @@ def product_list_view(request):
     return render(request, 'shop/pages/product_list.html', {'products': products})
 
 
-def shop_detail_view(request, product_id):
-    product = get_object_or_404(Product, id=product_id)
+def shop_detail_view(request, product_slug):
+    product = get_object_or_404(Product, slug=product_slug)
     return render(request, 'shop/pages/product_detail.html', {'product': product})
 
 
@@ -25,7 +25,7 @@ def product_add_view(request):
             product.owner = request.user
             product.save() 
             
-            return redirect('shop:product_detail', product_id=product.id)
+            return redirect('shop:product_detail', product_slug=product.slug)
     else:
         form = ProductForm()
 
@@ -38,8 +38,8 @@ def product_add_view(request):
         })
 
 @login_required
-def product_edit_view(request, product_id):
-    product = get_object_or_404(Product, id=product_id)
+def product_edit_view(request, product_slug):
+    product = get_object_or_404(Product, slug=product_slug)
 
     if request.user != product.owner:
         return render(request, 'shop/pages/not_allowed.html')
@@ -53,8 +53,9 @@ def product_edit_view(request, product_id):
     if request.method == "POST":
         form = ProductForm(request.POST, request.FILES, instance=product)
         if form.is_valid():
+            product.slug = None
             form.save()
-            return redirect("shop:product_detail", product_id=product.id)
+            return redirect("shop:product_detail", product_slug=product.slug)
         return render(request, 'shop/pages/product_form.html', context={"form": form, **extra_context})
 
     form = ProductForm(instance=product)
@@ -62,8 +63,8 @@ def product_edit_view(request, product_id):
 
 
 @login_required
-def product_remove_view(request, product_id):
-    product = get_object_or_404(Product, id=product_id)
+def product_remove_view(request, product_slug):
+    product = get_object_or_404(Product, slug=product_slug)
 
     if request.user != product.owner:
         return render(request, 'shop/pages/not_allowed.html')
