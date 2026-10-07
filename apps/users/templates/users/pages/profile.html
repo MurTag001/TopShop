@@ -8,6 +8,7 @@
 
 {% block styles %}
   <link rel="stylesheet" href="{% static 'users/css/pages/profile.css' %}">
+  <link rel="stylesheet" href="{% static 'shop/css/includes/product_container.css' %}">
 {% endblock styles %}
 
 {% block page_content %}
@@ -23,13 +24,9 @@
 
     <h2>Товары на продажу</h2>
          {% if products_list %}
-        <div class="list-group">
+        <div class="product-container">
             {% for product in products_list %}
-                <div class="list-group-item">
-                    <h5>{{ product.name }}</h5>
-                    <p>Цена: {{ product.price }} руб.</p>
-                    <a href="{% url 'shop:product_detail' product.pk %}" class="btn btn-sm btn-primary">Посмотреть</a>
-                </div>
+                {% include 'shop/includes/product_container.html' %}
             {% endfor %}
         </div>
     {% else %}

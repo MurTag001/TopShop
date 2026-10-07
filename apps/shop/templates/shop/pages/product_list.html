@@ -5,17 +5,14 @@
 
 {% block styles %}
   <link rel="stylesheet" href="{% static 'shop/css/pages/product_list.css' %}">
+  <link rel="stylesheet" href="{% static 'shop/css/includes/product_container.css' %}">
 {% endblock styles %}
 
 {% block page_content %}
   <h1>Наши товары</h1>
     <ul>
       {% for product in products %}
-      <div class="product-container"> 
-        <a href="{% url 'shop:product_detail' product_id=product.id %}">
-           <strong>{{ product.name }}</strong></a> — {{ product.price }} руб.
-        <p>{{ product.description }}</p>
-      </div>
+        {% include 'shop/includes/product_container.html' %}
       {% empty %}
       <div>Товаров пока нет.</div>
       {% endfor %}

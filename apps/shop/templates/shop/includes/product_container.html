@@ -1,0 +1,5 @@
+      <div class="product-container"> 
+        <a href="{% url 'shop:product_detail' product_id=product.id %}">
+           <strong>{{ product.name }}</strong></a> — {{ product.price }} руб.
+        <p>{{ product.description }}</p>
+      </div>
