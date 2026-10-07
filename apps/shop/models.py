@@ -4,7 +4,7 @@ from django.conf import settings
 
 class Product(models.Model):
     name = models.CharField(max_length=255, verbose_name="Название товара")
-    image = models.ImageField(upload_to="post_images/", null=True)
+    image = models.ImageField(upload_to="product_images/", null=True, blank=True)
     description = models.TextField(blank=True, null=True, verbose_name="Описание")
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена")
     stock = models.IntegerField(default=0, verbose_name="Остаток на складе")

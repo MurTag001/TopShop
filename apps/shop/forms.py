@@ -4,7 +4,7 @@ from .models import Product
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
-        fields = ['name', 'description', 'price', 'stock', 'is_active']
+        fields = ['name', 'description', 'price', 'stock', 'is_active', 'image']
         
         widgets = {
             'name': forms.TextInput(attrs={
@@ -34,7 +34,9 @@ class ProductForm(forms.ModelForm):
             'is_active': forms.CheckboxInput(attrs={
                 'id': 'activeInput',
                 'class': 'form-check-input'
-            })
+            }),
+            'image': forms.FileInput(attrs={
+                'class': 'form-control'})
         }
         
         labels = {
@@ -42,7 +44,8 @@ class ProductForm(forms.ModelForm):
             'description': 'Описание:',
             'price': 'Цена:',
             'stock': 'Количество на складе:',
-            'is_active': 'Доступен для продажи'
+            'is_active': 'Доступен для продажи',
+            'image': 'Картинка товара'
         }
 
     def clean_name(self):

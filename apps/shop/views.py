@@ -19,7 +19,7 @@ def shop_detail_view(request, product_id):
 @login_required
 def product_add_view(request):
     if request.method == "POST":
-        form = ProductForm(request.POST)
+        form = ProductForm(request.POST, request.FILES or None)
         if form.is_valid():
             product = form.save(commit=False)
             product.owner = request.user
@@ -51,7 +51,7 @@ def product_edit_view(request, product_id):
     }
 
     if request.method == "POST":
-        form = ProductForm(request.POST, instance=product)
+        form = ProductForm(request.POST,  request.FILES or None, instance=product)
 
         if form.is_valid():
             form.save()

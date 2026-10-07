@@ -11,9 +11,11 @@
 <h2>ID товара: {{ product.id }}</h2>
 <h3>{{ product.name }}</h3>
 
-  {% if post.image %}
-    <img src="{{ product.image.url }}" alt="Картинка товара">
-  {% endif %}
+{% if product.image %}
+    <img src="{{ product.image.url }}" alt="{{ product.name }}" width="200">
+{% else %}
+    <p>Нет изображения</p>
+{% endif %}
 
 <p><strong>Характеристики:</strong> {{ product.description }}</p>
 <p><strong>Цена:</strong> {{ product.price|floatformat:2 }} руб.</p>
