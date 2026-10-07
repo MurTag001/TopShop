@@ -35,8 +35,8 @@
 </p>
 
 {% if request.user == product.owner %}
-<a href="{% url 'shop:product_edit' product_id=product.id %}">Редактировать</a>
-<a href="{% url 'shop:product_remove' product_id=product.id %}">Удалить</a>
+<a href="{% url 'shop:product_edit' product_slug=product.slug %}">Редактировать</a>
+<a href="{% url 'shop:product_remove' product_slug=product.slug %}">Удалить</a>
 {% endif %}
 
 {% endblock page_content %}
