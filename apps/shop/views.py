@@ -53,7 +53,6 @@ def product_edit_view(request, product_slug):
     if request.method == "POST":
         form = ProductForm(request.POST, request.FILES, instance=product)
         if form.is_valid():
-            product.slug = None
             form.save()
             return redirect("shop:product_detail", product_slug=product.slug)
         return render(request, 'shop/pages/product_form.html', context={"form": form, **extra_context})
