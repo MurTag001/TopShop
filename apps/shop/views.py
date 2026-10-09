@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from .models import Product
 from .forms import ProductForm
@@ -12,7 +13,12 @@ def product_list_view(request):
 
 
 def shop_detail_view(request, product_slug):
-    product = get_object_or_404(Product, slug=product_slug)
+    if request.user.is_authenticated:
+        condition = Q(slug=product_slug) & (Q(is_active=True) | Q(owner=request.user))
+    else:
+        condition = Q(slug=product_slug) & Q(is_active=True)
+    product = get_object_or_404(Product, condition)
+    
     return render(request, 'shop/pages/product_detail.html', {'product': product})
 
 

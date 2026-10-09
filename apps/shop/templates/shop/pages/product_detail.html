@@ -11,6 +11,16 @@
 <h2>ID товара: {{ product.id }}</h2>
 <h3>{{ product.name }}</h3>
 
+ {% if request.user == product.owner %}
+    <p><strong>Модерация:</strong> 
+      {% if product.is_active %}
+        <span style="color: green;">Активен</span>
+      {% else %}
+        <span style="color: orange;">Черновик / Деактивирован</span>
+      {% endif %}
+    </p>
+  {% endif %}
+
 {% if product.image %}
     <img src="{{ product.image.url }}" alt="{{ product.name }}" width="200">
 {% else %}

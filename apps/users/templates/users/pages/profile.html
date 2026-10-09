@@ -15,22 +15,24 @@
   <form method="POST">
     {% csrf_token %}
 
-  <div class="profile-container">
-    <h1>Личный кабинет пользователя</h1>
-    <p><strong>Логин:</strong> {{ profile_user.username }}</p>
-    <p><strong>Email:</strong> {{ profile_user.email }}</p>
-    <p><strong>Имя:</strong> {{ profile_user.first_name }}</p>
-    <p><strong>Фамилия:</strong> {{ profile_user.last_name }}</p>
+<div class="profile-container">
+  <h1>Личный кабинет пользователя</h1>
+  <p><strong>Логин:</strong> {{ profile_user.username }}</p>
+  <p><strong>Email:</strong> {{ profile_user.email }}</p>
+  <p><strong>Имя:</strong> {{ profile_user.first_name }}</p>
+  <p><strong>Фамилия:</strong> {{ profile_user.last_name }}</p>
 
-    <h2>Товары на продажу</h2>
-         {% if products_list %}
-        <div class="product-container">
-            {% for product in products_list %}
+  <h2>Товары на продажу</h2>
+  {% if products_list %}
+      <div class="product-container">
+          {% for product in products_list %}
+            {% if request.user == profile_user or product.is_active %}
                 {% include 'shop/includes/product_container.html' %}
-            {% endfor %}
-        </div>
-    {% else %}
-        <p class="mb-4">Этот пользователь еще не добавил ни одного товара.</p>
-    {% endif %}
-  </div>
+            {% endif %}
+          {% endfor %}
+      </div>
+  {% else %}
+      <p class="mb-4">Этот пользователь еще не добавил ни одного товара.</p>
+  {% endif %}
+</div>
 {% endblock page_content %}
