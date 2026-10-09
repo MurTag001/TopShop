@@ -7,6 +7,12 @@ from unidecode import unidecode
 class Product(models.Model):
     name = models.CharField(max_length=255, verbose_name="Название товара")
     slug = models.SlugField(max_length=255, unique=True, editable=False)
+    category = models.ForeignKey(
+        'Category',
+        related_name='products',
+        on_delete=models.CASCADE,
+        verbose_name="Категория"
+    )
     image = models.ImageField(upload_to="product_images/", null=True, blank=True)
     description = models.TextField(blank=True, null=True, verbose_name="Описание")
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена")
