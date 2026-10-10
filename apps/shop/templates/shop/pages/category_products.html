@@ -1,0 +1,23 @@
+{% extends 'shop/base.html' %}
+{% load static %}
+
+{% block page_title %}
+  TopShop | Товары в категории {{ category }}
+{% endblock page_title %}
+
+{% block styles %}
+  <link rel="stylesheet" href="{% static 'shop/css/includes/product_container.css' %}">
+{% endblock styles %}
+
+{% block page_content %}
+  <a href="javascript:history.back()">&larr; Назад</a>
+  <h1>Товары в категории: {{ category }}</h1>
+
+  {% if products %}
+    {% for product in products %}
+      {% include 'shop/includes/product_container.html' %}
+    {% endfor %}
+  {% else %}
+    <p>В этой категории пока нет товаров.</p>
+  {% endif %}
+{% endblock page_content %}
