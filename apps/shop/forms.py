@@ -50,6 +50,10 @@ class ProductForm(forms.ModelForm):
             'is_active': 'Доступен для продажи',
             'image': 'Картинка товара'
         }
+        help_texts = {
+      'category': "- можно выбрать только одну категорию"
+    }
+        
 
     def clean_name(self):
         name = self.cleaned_data.get('name', '').strip()
