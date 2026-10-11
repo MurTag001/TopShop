@@ -4,7 +4,7 @@ from .models import Product
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
-        fields = ['name', 'category', 'description', 'price', 'stock', 'is_active', 'image']
+        fields = ['name', 'category', 'tags', 'description', 'price', 'stock', 'is_active', 'image']
         
         widgets = {
             'name': forms.TextInput(attrs={
@@ -37,6 +37,8 @@ class ProductForm(forms.ModelForm):
             }),
             'category': forms.Select(attrs={
                 'class': 'form-control'}),
+            'tags': forms.SelectMultiple(attrs={
+                'class': 'form-control'}),
             'image': forms.FileInput(attrs={
                 'class': 'form-control'})
         }
@@ -44,6 +46,7 @@ class ProductForm(forms.ModelForm):
         labels = {
             'name': 'Наименование:',
             'category': 'Категория:',
+            'tags': 'Теги:',
             'description': 'Описание:',
             'price': 'Цена:',
             'stock': 'Количество на складе:',
@@ -51,7 +54,8 @@ class ProductForm(forms.ModelForm):
             'image': 'Картинка товара'
         }
         help_texts = {
-      'category': "- можно выбрать только одну категорию"
+      'category': "- можно выбрать только одну категорию",
+      'tags': '- можно выбрать несколько тегов',
     }
         
 

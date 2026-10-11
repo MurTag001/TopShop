@@ -40,7 +40,8 @@ def product_add_view(request):
         if form.is_valid():
             product = form.save(commit=False)
             product.owner = request.user
-            product.save() 
+            product.save()
+            form.save_m2m()
             
             return redirect('shop:product_detail', product_slug=product.slug)
     else:
