@@ -1,0 +1,23 @@
+{% extends 'shop/base.html' %}
+{% load static %}
+
+{% block page_title %}
+  TopShop | Товары с тегом {{ tag }}
+{% endblock page_title %}
+
+{% block styles %}
+  <link rel="stylesheet" href="{% static 'shop/css/includes/product_container.css' %}">
+{% endblock styles %}
+
+{% block page_content %}
+  <a href="javascript:history.back()">&larr; Назад</a>
+  <h1>Посты с тегом: {{ tag }}</h1>
+
+  {% if products %}
+    {% for product in products %}
+      {% include 'shop/includes/product_container.html' %}
+    {% endfor %}
+  {% else %}
+    <p>С этим тегом пока нет постов.</p>
+  {% endif %}
+{% endblock page_content %}

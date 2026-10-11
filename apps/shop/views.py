@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
-from .models import Category, Product
+from .models import Category, Product, Tag
 from .forms import ProductForm
 
 def home_page_view(request):
@@ -31,6 +31,17 @@ def category_products_view(request, category_slug):
         'products': products
     }
     return render(request, 'shop/pages/category_products.html', context)
+
+
+def tag_products_view(request, tag_slug):
+    tag = get_object_or_404(Tag, slug=tag_slug)
+    products = tag.products.filter(is_active=True)
+
+    context = {
+        'tag': tag,
+        'products': products
+    }
+    return render(request, 'shop/pages/tag_products.html', context)
 
 
 @login_required
