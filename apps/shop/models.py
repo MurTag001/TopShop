@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.urls import reverse
 from django.utils.text import slugify
 from unidecode import unidecode
 
@@ -31,6 +32,9 @@ class Product(models.Model):
         verbose_name = "Товар"
         verbose_name_plural = "Товары"
         ordering = ['-created_at']
+
+    def get_absolute_url(self):
+        return reverse('shop:product_detail', kwargs={'product_slug': self.slug})
 
 
     def save(self, *args, **kwargs):
