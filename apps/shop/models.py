@@ -14,6 +14,7 @@ class Product(models.Model):
         on_delete=models.CASCADE,
         verbose_name="Категория"
     )
+    tags = models.ManyToManyField("Tag", related_name='products', blank=True, verbose_name='Теги')
     image = models.ImageField(upload_to="product_images/", null=True, blank=True)
     description = models.TextField(blank=True, null=True, verbose_name="Описание")
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена")
