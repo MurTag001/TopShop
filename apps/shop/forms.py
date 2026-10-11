@@ -2,9 +2,20 @@ from django import forms
 from .models import Product
 
 class ProductForm(forms.ModelForm):
+      
+    tags_input = forms.CharField(
+    required=False,
+    widget=forms.TextInput(attrs={
+      'class': 'form-control',
+      'placeholder': 'Введите теги через запятую'
+    }),
+    label="Теги",
+    help_text="- можно указать несколько тегов",
+    )
+
     class Meta:
         model = Product
-        fields = ['name', 'category', 'tags', 'description', 'price', 'stock', 'is_active', 'image']
+        fields = ['name', 'category', 'tags_input', 'description', 'price', 'stock', 'is_active', 'image']
         
         widgets = {
             'name': forms.TextInput(attrs={
@@ -64,3 +75,12 @@ class ProductForm(forms.ModelForm):
         if len(name) < 6:
             raise forms.ValidationError("Наименование не должно быть короче 6 символов.")
         return name
+
+
+    def clean_tags_input(self):
+        tag_names = [
+            tag_name.strip().lower()
+            for tag_name in self.cleaned_data.get('tags_input').split(',')
+            if tag_name.strip()
+        ]
+        return tag_names

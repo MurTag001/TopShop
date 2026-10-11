@@ -17,8 +17,8 @@ def shop_detail_view(request, product_slug):
         condition = Q(slug=product_slug) & (Q(is_active=True) | Q(owner=request.user))
     else:
         condition = Q(slug=product_slug) & Q(is_active=True)
-    product = get_object_or_404(Product, condition)
     
+    product = get_object_or_404(Product, condition)
     return render(request, 'shop/pages/product_detail.html', {'product': product})
 
 
@@ -52,7 +52,12 @@ def product_add_view(request):
             product = form.save(commit=False)
             product.owner = request.user
             product.save()
-            form.save_m2m()
+
+            tag_names = form.cleaned_data.get('tags_input')
+
+            for tag_name in tag_names:
+                tag, _ = Tag.objects.get_or_create(name=tag_name)
+                product.tags.add(tag)
             
             return redirect('shop:product_detail', product_slug=product.slug)
     else:
@@ -68,7 +73,8 @@ def product_add_view(request):
 
 @login_required
 def product_edit_view(request, product_slug):
-    product = get_object_or_404(Product, slug=product_slug)
+    condition = Q(slug=product_slug) & (Q(is_active=True) | Q(owner=request.user))
+    product = get_object_or_404(Product, condition)
 
     if request.user != product.owner:
         return render(request, 'shop/pages/not_allowed.html')
@@ -83,10 +89,19 @@ def product_edit_view(request, product_slug):
         form = ProductForm(request.POST, request.FILES, instance=product)
         if form.is_valid():
             form.save()
+
+            product.tags.clear()
+            tag_names = form.cleaned_data.get('tags_input')
+            for tag_name in tag_names:
+                tag, _ = Tag.objects.get_or_create(name=tag_name)
+                product.tags.add(tag)
+
             return redirect("shop:product_detail", product_slug=product.slug)
         return render(request, 'shop/pages/product_form.html', context={"form": form, **extra_context})
+    else:
+        existing_tags = ", ".join(tag.name for tag in product.tags.all())
+        form = ProductForm(instance=product, initial={'tags_input': existing_tags})
 
-    form = ProductForm(instance=product)
     return render(request, 'shop/pages/product_form.html', context={"form": form, **extra_context})
 
 

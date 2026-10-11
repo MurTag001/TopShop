@@ -83,7 +83,7 @@ class Tag(models.Model):
 
 
     def get_absolute_url(self):
-        return reverse('shop:tag_posts', kwargs={'tag_slug': self.slug})
+        return reverse('shop:tag_products', kwargs={'tag_slug': self.slug})
 
 
     def save(self, *args, **kwargs):
