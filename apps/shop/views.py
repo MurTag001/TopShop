@@ -66,19 +66,22 @@ def product_add_view(request):
 
             m_name = form.cleaned_data.get('manufacturer_input')
             m_country = form.cleaned_data.get('manufacturer_country_input') or "Не указана"
-            
-            if m_name:
+
+            if m_name and m_name.strip():
                 m_name = m_name.strip()
-                m_slug = slugify(m_name.lower()) or "manufacturer-slug" 
-            
+                m_slug = slugify(m_name.lower()) or "manufacturer-slug"
+
                 manufacturer, created = Manufacturer.objects.get_or_create(
                     name=m_name,
-                     defaults={
+                    defaults={
                         'country': m_country,
                         'slug': m_slug,
                         'description': f"Производитель {m_name}"
-                     })
-            product.manufacturer = manufacturer
+                    })
+                product.manufacturer = manufacturer
+            else:
+                product.manufacturer = None 
+
             product.save()
 
             tag_names = form.cleaned_data.get('tags_input')
@@ -121,7 +124,7 @@ def product_edit_view(request, product_slug):
             m_name = form.cleaned_data.get('manufacturer_input')
             m_country = form.cleaned_data.get('manufacturer_country_input') or "Не указана"
 
-            if m_name:
+            if m_name and m_name.strip():
                 m_name = m_name.strip()
                 m_slug = slugify(m_name.lower()) or "manufacturer-slug"
                 
