@@ -57,6 +57,10 @@ class Category(models.Model):
         verbose_name_plural = "категории"
 
 
+    def get_absolute_url(self):
+        return reverse('shop:category_products', kwargs={'category_slug': self.slug})
+
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(unidecode(self.name))

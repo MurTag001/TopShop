@@ -1,5 +1,5 @@
       <div class="product-container">
-        <p>Категория: <a href="{% url 'shop:category_products' product.category.slug %}">{{ product.category }}</a></p>
+        <p>Категория: <a href="{{ product.category.get_absolute_url }}">{{ product.category }}</a></p>
         <a href="{% url 'shop:product_detail' product.slug %}">
            <strong>{{ product.name }}</strong></a> — {{ product.price }} руб.
         <p>{{ product.description }}</p>

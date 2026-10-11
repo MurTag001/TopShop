@@ -11,7 +11,7 @@
 <h2>ID товара: {{ product.id }}</h2>
 <h3>{{ product.name }}</h3>
 
-<p>Категория: <a href="{% url 'shop:category_products' product.category.slug %}">{{ product.category }}</a></p>
+<p>Категория: <a href="{{ product.category.get_absolute_url }}">{{ product.category }}</a></p>
 
  {% if request.user == product.owner %}
     <p><strong>Модерация:</strong> 
