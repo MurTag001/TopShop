@@ -1,7 +1,8 @@
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
-from .models import Category, Product, Tag
+from django.utils.text import slugify
+from .models import Category, Product, Tag, Manufacturer
 from .forms import ProductForm
 
 def home_page_view(request):
@@ -44,6 +45,17 @@ def tag_products_view(request, tag_slug):
     return render(request, 'shop/pages/tag_products.html', context)
 
 
+def manufacturer_products_view(request, manufacturer_slug):
+    manufacturer = get_object_or_404(Manufacturer, slug=manufacturer_slug)
+    products = manufacturer.products.filter(is_active=True)
+
+    context = {
+        'manufacturer': manufacturer,
+        'products': products
+    }
+    return render(request, 'shop/pages/manufacturer_products.html', context)
+
+
 @login_required
 def product_add_view(request):
     if request.method == "POST":
@@ -51,6 +63,22 @@ def product_add_view(request):
         if form.is_valid():
             product = form.save(commit=False)
             product.owner = request.user
+
+            m_name = form.cleaned_data.get('manufacturer_input')
+            m_country = form.cleaned_data.get('manufacturer_country_input') or "Не указана"
+            
+            if m_name:
+                m_name = m_name.strip()
+                m_slug = slugify(m_name.lower()) or "manufacturer-slug" 
+            
+                manufacturer, created = Manufacturer.objects.get_or_create(
+                    name=m_name,
+                     defaults={
+                        'country': m_country,
+                        'slug': m_slug,
+                        'description': f"Производитель {m_name}"
+                     })
+            product.manufacturer = manufacturer
             product.save()
 
             tag_names = form.cleaned_data.get('tags_input')
@@ -90,6 +118,23 @@ def product_edit_view(request, product_slug):
         if form.is_valid():
             form.save()
 
+            m_name = form.cleaned_data.get('manufacturer_input')
+            m_country = form.cleaned_data.get('manufacturer_country_input') or "Не указана"
+
+            if m_name:
+                m_name = m_name.strip()
+                m_slug = slugify(m_name.lower()) or "manufacturer-slug"
+                
+                manufacturer, _ = Manufacturer.objects.get_or_create(
+                    name=m_name,
+                    defaults={'country': m_country, 'slug': m_slug}
+                )
+                product.manufacturer = manufacturer
+            else:
+                product.manufacturer = None
+                
+            product.save()
+
             product.tags.clear()
             tag_names = form.cleaned_data.get('tags_input')
             for tag_name in tag_names:
@@ -99,8 +144,13 @@ def product_edit_view(request, product_slug):
             return redirect("shop:product_detail", product_slug=product.slug)
         return render(request, 'shop/pages/product_form.html', context={"form": form, **extra_context})
     else:
-        existing_tags = ", ".join(tag.name for tag in product.tags.all())
-        form = ProductForm(instance=product, initial={'tags_input': existing_tags})
+        initial_data = {}
+        if product.manufacturer:
+            initial_data['manufacturer_input'] = product.manufacturer.name
+            initial_data['manufacturer_country_input'] = product.manufacturer.country
+            
+        initial_data['tags_input'] = ", ".join(tag.name for tag in product.tags.all())
+        form = ProductForm(instance=product, initial=initial_data)
 
     return render(request, 'shop/pages/product_form.html', context={"form": form, **extra_context})
 

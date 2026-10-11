@@ -22,6 +22,13 @@
   {% endfor %}
 </p>
 
+{% if product.manufacturer %}
+    <p>
+        <strong>Производитель:</strong> 
+        <a href="{{ product.manufacturer.get_absolute_url }}">{{ product.manufacturer.name }}</a> 
+        ({{ product.manufacturer.country }})
+{% endif %}
+
  {% if request.user == product.owner %}
     <p><strong>Модерация:</strong> 
       {% if product.is_active %}

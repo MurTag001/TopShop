@@ -15,6 +15,14 @@ class Product(models.Model):
         verbose_name="Категория"
     )
     tags = models.ManyToManyField("Tag", related_name='products', blank=True, verbose_name='Теги')
+    manufacturer = models.ForeignKey(
+        'Manufacturer',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="products",
+        verbose_name="Производитель"
+    )
     image = models.ImageField(upload_to="product_images/", null=True, blank=True)
     description = models.TextField(blank=True, null=True, verbose_name="Описание")
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена")
@@ -94,3 +102,21 @@ class Tag(models.Model):
 
     def __str__(self):
         return f'#{self.name}'
+
+
+class Manufacturer(models.Model):
+    name = models.CharField(max_length=255, verbose_name="Название")
+    slug = models.SlugField(max_length=255, unique=True, verbose_name="URL-слаг")
+    country = models.CharField(max_length=100, verbose_name="Страна")
+    website = models.URLField(blank=True, null=True, verbose_name="Сайт")
+    description = models.TextField(verbose_name="Описание")
+
+    class Meta:
+        verbose_name = "Производитель"
+        verbose_name_plural = "Производители"
+
+    def get_absolute_url(self):
+        return reverse('shop:manufacturer_products', kwargs={'manufacturer_slug': self.slug})
+
+    def __str__(self):
+        return self.name

@@ -13,6 +13,19 @@ class ProductForm(forms.ModelForm):
     help_text="- можно указать несколько тегов",
     )
 
+    manufacturer_input = forms.CharField(
+        max_length=255, 
+        required=False, 
+        label="Производитель (Название)",
+        widget=forms.TextInput(attrs={'placeholder': 'Например: Apple, Sony...'})
+    )
+    manufacturer_country_input = forms.CharField(
+        max_length=100, 
+        required=False, 
+        label="Страна производителя",
+        widget=forms.TextInput(attrs={'placeholder': 'Например: США, Япония...'})
+    )
+
     class Meta:
         model = Product
         fields = ['name', 'category', 'tags_input', 'description', 'price', 'stock', 'is_active', 'image']
