@@ -69,3 +69,27 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Tag(models.Model):
+    name = models.CharField(max_length=50, verbose_name='Название')
+    slug = models.SlugField(max_length=50, unique=True, editable=False)
+
+
+    class Meta:
+        verbose_name = "тег"
+        verbose_name_plural = "теги"
+
+
+    def get_absolute_url(self):
+        return reverse('shop:tag_posts', kwargs={'tag_slug': self.slug})
+
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(unidecode(self.name))
+        super().save(*args, **kwargs)
+
+
+    def __str__(self):
+        return f'#{self.name}'
