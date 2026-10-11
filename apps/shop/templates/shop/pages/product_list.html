@@ -10,7 +10,7 @@
 
 {% block page_content %}
   <h1>Наши товары</h1>
-    <ul>
+    <ul class="products-grid">
       {% for product in products %}
         {% include 'shop/includes/product_container.html' %}
       {% empty %}

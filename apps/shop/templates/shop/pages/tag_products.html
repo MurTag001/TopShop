@@ -12,12 +12,13 @@
 {% block page_content %}
   <a href="javascript:history.back()">&larr; Назад</a>
   <h1>Посты с тегом: {{ tag }}</h1>
-
+  <div class="products-grid">
   {% if products %}
     {% for product in products %}
       {% include 'shop/includes/product_container.html' %}
     {% endfor %}
   {% else %}
+  </div>
     <p>С этим тегом пока нет постов.</p>
   {% endif %}
 {% endblock page_content %}

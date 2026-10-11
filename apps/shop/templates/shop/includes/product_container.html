@@ -1,16 +1,40 @@
-      <div class="product-container">
-        <p>Категория: <a href="{{ product.category.get_absolute_url }}">{{ product.category }}</a></p>
-        
-        <p>
-          Теги:
-          {% for tag in product.tags.all %}
-            <a href="{{ tag.get_absolute_url }}">{{ tag }}</a>{% if not forloop.last %}, {% endif %}
-          {% empty %}
-            нет тегов
-          {% endfor %}
-        </p>
+<div class="product-container">
+  <div class="product-body">
+    <div class="product-image-wrapper">
+      {% if product.image %}
+      <img src="{{ product.image.url }}" alt="{{ product.name }}" />
+      {% else %}
+      <div class="product-image-placeholder"><span>Нет фото</span></div>
+      {% endif %}
+    </div>
 
-        <a href="{% url 'shop:product_detail' product.slug %}">
-           <strong>{{ product.name }}</strong></a> — {{ product.price }} руб.
-        <p>{{ product.description }}</p>
-      </div>
+    <p class="product-category">
+      Категория:
+      <a href="{{ product.category.get_absolute_url }}"
+        >{{ product.category }}</a
+      >
+        {% if product.tags.all %}
+            <div class="product-tags">
+            {% for tag in product.tags.all %}
+            <a href="{% url 'shop:tag_products' tag_slug=tag.slug %}" class="tag-badge">
+            #{{ tag.name }}
+            </a>
+            {% endfor %}
+            </div>
+        {% endif %}
+    </p>
+
+    <h3 class="product-title">
+      <a href="{{ product.get_absolute_url }}"
+        ><strong>{{ product.name }}</strong></a
+      >
+    </h3>
+
+    <p>
+      {{ product.description|truncatewords:10 }}
+    </p>
+  </div>
+  <div class="product-footer">
+    <span class="product-price">{{ product.price }} руб.</span>
+  </div>
+</div>

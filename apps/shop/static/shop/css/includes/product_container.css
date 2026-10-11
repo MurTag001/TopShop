@@ -1,7 +1,146 @@
+/* Контейнер для всей сетки товаров */
+.products-grid {
+    display: grid;
+    /* Разделяет сетку на колонки. Каждая карточка будет от 250px до 320px максимум */
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 24px; /* Промежуток между карточками */
+    padding: 20px 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Ограничение для самой карточки, чтобы она не растягивалась шире разумного */
 .product-container {
-    background-color: rgb(74, 151, 74);
-    color: white;
-    border: 1px solid black;
-    margin-bottom: 10px;
-    padding: 15px;
+    background-color: #2d6a4f;
+    color: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    max-width: 100%; /* Запрещает карточке вылезать за пределы своей ячейки */
+    box-sizing: border-box;
+    
+}
+
+
+.product-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Оформление контента внутри карточки */
+.product-body {
+    flex-grow: 1; /* Позволяет текстовой части занимать все свободное место */
+    margin-bottom: 16px;
+}
+
+.product-title {
+    font-size: 1.25rem;
+    margin: 8px 0;
+}
+
+.product-title a {
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.product-title a:hover {
+    text-decoration: underline;
+}
+
+.product-category {
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+.product-category a {
+    color: #b7e4c7;
+    text-decoration: none;
+}
+
+/* Оформление нижней части (цена) */
+.product-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.product-price {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #d8f3dc;
+}
+
+/* Блок-обертка для картинки */
+.product-image-wrapper {
+    width: 100%;
+    height: 180px; /* Фиксированная высота для всех миниатюр */
+    overflow: hidden;
+    border-radius: 8px; /* Скругляем углы картинки */
+    margin-bottom: 14px;
+    background-color: rgba(255, 255, 255, 0.05); /* Легкий фон на случай, если картинка на прозрачном фоне */
+}
+
+/* Сама картинка товара */
+.product-image-wrapper img {
+    width: 100% !important;
+    height: 100% !important; /* Принудительно заполняем всю высоту контейнера (180px) */
+    display: block;
+    object-fit: cover !important; /* Запрещаем искажение пропорций */
+    object-position: center !important; /* Центрируем изображение */
+    transition: transform 0.3s ease;
+}
+
+/* Эффект легкого увеличения картинки при наведении на карточку */
+.product-container:hover .product-image-wrapper img {
+    transform: scale(1.05);
+}
+
+/* Заглушка, если у товара нет изображения */
+.product-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+/* Контейнер для списка тегов */
+.product-tags {
+    display: flex;
+    flex-wrap: wrap; /* Если тегов много, они перенесутся на новую строку */
+    gap: 6px; /* Расстояние между тегами */
+    margin-top: 12px;
+    margin-bottom: 4px;
+}
+
+/* Стилизация отдельного тега-ссылки */
+.tag-badge {
+    display: inline-block;
+    background-color: rgba(255, 255, 255, 0.15); /* Полупрозрачный фон под цвет карточки */
+    color: #ffffff !important;
+    font-size: 0.75rem; /* Делаем шрифт чуть меньше основного */
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 20px; /* Капсульная форма */
+    text-decoration: none !important;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+/* Эффект при наведении на тег */
+.tag-badge:hover {
+    background-color: #b7e4c7 !important; /* Нежно-зелёный цвет при наведении */
+    color: #1b4332 !important; /* Тёмный текст для контраста */
+    transform: scale(1.05); /* Легкое увеличение */
 }
