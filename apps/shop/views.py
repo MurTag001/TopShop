@@ -1,173 +1,256 @@
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Q
-from django.shortcuts import get_object_or_404, redirect, render
+from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404, render
+from django.urls import reverse, reverse_lazy
 from django.utils.text import slugify
-from .models import Category, Product, Tag, Manufacturer
+from django.views.generic import (
+    CreateView,
+    DeleteView,
+    DetailView,
+    ListView,
+    TemplateView,
+    UpdateView,
+)
+
 from .forms import ProductForm
-from django.views.generic import TemplateView
+from .models import Category, Manufacturer, Product, Tag
+
 
 class HomePageView(TemplateView):
-    template_name =  'shop/pages/index.html'
-
-def product_list_view(request):
-    products = Product.objects.filter(is_active=True)
-    return render(request, 'shop/pages/product_list.html', {'products': products})
+    template_name = "shop/pages/index.html"
 
 
-def shop_detail_view(request, product_slug):
-    if request.user.is_authenticated:
-        condition = Q(slug=product_slug) & (Q(is_active=True) | Q(owner=request.user))
-    else:
-        condition = Q(slug=product_slug) & Q(is_active=True)
-    
-    product = get_object_or_404(Product, condition)
-    return render(request, 'shop/pages/product_detail.html', {'product': product})
+class ProductListView(ListView):
+    queryset = Product.objects.filter(is_active=True)
+    context_object_name = "products"
+    template_name = "shop/pages/product_list.html"
 
 
-def category_products_view(request, category_slug):
-    category = get_object_or_404(Category, slug=category_slug)
-    products = category.products.filter(is_active=True)
+class ShopDetailView(DetailView):
+    slug_url_kwarg = "product_slug"
+    template_name = "shop/pages/product_detail.html"
 
-    context = {
-        'category': category,
-        'products': products
-    }
-    return render(request, 'shop/pages/category_products.html', context)
-
-
-def tag_products_view(request, tag_slug):
-    tag = get_object_or_404(Tag, slug=tag_slug)
-    products = tag.products.filter(is_active=True)
-
-    context = {
-        'tag': tag,
-        'products': products
-    }
-    return render(request, 'shop/pages/tag_products.html', context)
+    def get_queryset(self):
+        if self.request.user.is_authenticated:
+            return Product.objects.filter(
+                Q(is_active=True) | Q(owner=self.request.user)
+            )
+        return Product.objects.filter(is_active=True)
 
 
-def manufacturer_products_view(request, manufacturer_slug):
-    manufacturer = get_object_or_404(Manufacturer, slug=manufacturer_slug)
-    products = manufacturer.products.filter(is_active=True)
+class CategoryProductsView(ListView):
+    context_object_name = "products"
+    template_name = "shop/pages/category_products.html"
 
-    context = {
-        'manufacturer': manufacturer,
-        'products': products
-    }
-    return render(request, 'shop/pages/manufacturer_products.html', context)
+    def get_queryset(self):
+        self.category = get_object_or_404(
+            Category, slug=self.kwargs["category_slug"]
+        )
+        return self.category.products.filter(is_active=True)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["category"] = self.category
+        return context
 
 
-@login_required
-def product_add_view(request):
-    if request.method == "POST":
-        form = ProductForm(request.POST, request.FILES or None)
-        if form.is_valid():
-            product = form.save(commit=False)
-            product.owner = request.user
+class TagProductsView(ListView):
+    context_object_name = "products"
+    template_name = "shop/pages/tag_products.html"
 
-            m_name = form.cleaned_data.get('manufacturer_input')
-            m_country = form.cleaned_data.get('manufacturer_country_input') or "Не указана"
+    def get_queryset(self):
+        self.tag = get_object_or_404(Tag, slug=self.kwargs["tag_slug"])
+        return self.tag.products.filter(is_active=True)
 
-            if m_name and m_name.strip():
-                m_name = m_name.strip()
-                m_slug = slugify(m_name.lower()) or "manufacturer-slug"
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["tag"] = self.tag
+        return context
 
-                manufacturer, created = Manufacturer.objects.get_or_create(
-                    name=m_name,
-                    defaults={
-                        'country': m_country,
-                        'slug': m_slug,
-                        'description': f"Производитель {m_name}"
-                    })
-                product.manufacturer = manufacturer
-            else:
-                product.manufacturer = None 
 
-            product.save()
+class ManufacturerProductsView(ListView):
+    template_name = "shop/pages/manufacturer_products.html"
+    context_object_name = "products"
 
-            tag_names = form.cleaned_data.get('tags_input')
+    def get_queryset(self):
+        self.manufacturer = get_object_or_404(
+            Manufacturer, slug=self.kwargs["manufacturer_slug"]
+        )
+        return self.manufacturer.products.filter(is_active=True)
 
-            for tag_name in tag_names:
-                tag, _ = Tag.objects.get_or_create(name=tag_name)
-                product.tags.add(tag)
-            
-            return redirect('shop:product_detail', product_slug=product.slug)
-    else:
-        form = ProductForm()
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["manufacturer"] = self.manufacturer
+        return context
 
-    return render(request, 'shop/pages/product_add.html', 
-        {
-            "form": form,
-            "title": "Добавить позицию",
-            "h1": "Новый товар",
-            "submit_button_text": "Добавить",
-        })
 
-@login_required
-def product_edit_view(request, product_slug):
-    condition = Q(slug=product_slug) & (Q(is_active=True) | Q(owner=request.user))
-    product = get_object_or_404(Product, condition)
+class ProductAddView(LoginRequiredMixin, CreateView):
+    model = Product
+    form_class = ProductForm
+    template_name = "shop/pages/product_add.html"
 
-    if request.user != product.owner:
-        return render(request, 'shop/pages/not_allowed.html')
-    
-    extra_context = {
-        "title": "Редактировать позицию",
-        "h1": "Редактирование",
-        "submit_button_text": "Сохранить",
-    }
+    def form_valid(self, form):
+        product = form.save(commit=False)
+        product.owner = self.request.user
 
-    if request.method == "POST":
-        form = ProductForm(request.POST, request.FILES, instance=product)
-        if form.is_valid():
-            form.save()
+        m_name = form.cleaned_data.get("manufacturer_input")
+        m_country = (
+            form.cleaned_data.get("manufacturer_country_input") or "Не указана"
+        )
 
-            m_name = form.cleaned_data.get('manufacturer_input')
-            m_country = form.cleaned_data.get('manufacturer_country_input') or "Не указана"
+        if m_name and m_name.strip():
+            m_name = m_name.strip()
+            m_slug = (
+                slugify(m_name.lower(), allow_unicode=True)
+                or "manufacturer-slug"
+            )
 
-            if m_name and m_name.strip():
-                m_name = m_name.strip()
-                m_slug = slugify(m_name.lower()) or "manufacturer-slug"
-                
-                manufacturer, _ = Manufacturer.objects.get_or_create(
-                    name=m_name,
-                    defaults={'country': m_country, 'slug': m_slug}
-                )
-                product.manufacturer = manufacturer
-            else:
-                product.manufacturer = None
-                
-            product.save()
+            manufacturer, created = Manufacturer.objects.get_or_create(
+                name=m_name,
+                defaults={
+                    "country": m_country,
+                    "slug": m_slug,
+                    "description": f"Производитель {m_name}",
+                },
+            )
+            product.manufacturer = manufacturer
+        else:
+            product.manufacturer = None
 
-            product.tags.clear()
-            tag_names = form.cleaned_data.get('tags_input')
-            for tag_name in tag_names:
-                tag, _ = Tag.objects.get_or_create(name=tag_name)
-                product.tags.add(tag)
+        product.save()
 
-            return redirect("shop:product_detail", product_slug=product.slug)
-        return render(request, 'shop/pages/product_form.html', context={"form": form, **extra_context})
-    else:
-        initial_data = {}
+        tag_names = form.cleaned_data.get("tags_input") or []
+        for tag_name in tag_names:
+            tag, _ = Tag.objects.get_or_create(name=tag_name)
+            product.tags.add(tag)
+
+        form.save_m2m()
+
+        self.object = product
+        return HttpResponseRedirect(self.get_success_url())
+
+    def get_success_url(self):
+        return reverse(
+            "shop:product_detail", kwargs={"product_slug": self.object.slug}
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            {
+                "title": "Добавить позицию",
+                "h1": "Новый товар",
+                "submit_button_text": "Добавить",
+            }
+        )
+        return context
+
+
+class ProductEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Product
+    form_class = ProductForm
+    template_name = "shop/pages/product_form.html"
+    slug_url_kwarg = "product_slug"
+
+    _cached_object = None
+
+    def get_object(self, queryset=None):
+        if self._cached_object is None:
+            if queryset is None:
+                queryset = self.get_queryset()
+
+            product_slug = self.kwargs.get(self.slug_url_kwarg)
+            condition = Q(slug=product_slug) & (
+                Q(is_active=True) | Q(owner=self.request.user)
+            )
+
+            self._cached_object = get_object_or_404(queryset, condition)
+
+        return self._cached_object
+
+    def test_func(self):
+        product = self.get_object()
+        return self.request.user == product.owner
+
+    def handle_no_permission(self):
+        return render(self.request, "shop/pages/not_allowed.html")
+
+    def get_initial(self):
+        initial = super().get_initial()
+        product = self.get_object()
+
         if product.manufacturer:
-            initial_data['manufacturer_input'] = product.manufacturer.name
-            initial_data['manufacturer_country_input'] = product.manufacturer.country
-            
-        initial_data['tags_input'] = ", ".join(tag.name for tag in product.tags.all())
-        form = ProductForm(instance=product, initial=initial_data)
+            initial["manufacturer_input"] = product.manufacturer.name
+            initial["manufacturer_country_input"] = (
+                product.manufacturer.country
+            )
 
-    return render(request, 'shop/pages/product_form.html', context={"form": form, **extra_context})
+        initial["tags_input"] = ", ".join(tag.name for tag in product.tags.all())
+        return initial
+
+    def form_valid(self, form):
+        product = form.save(commit=False)
+
+        m_name = form.cleaned_data.get("manufacturer_input")
+        m_country = (
+            form.cleaned_data.get("manufacturer_country_input") or "Не указана"
+        )
+
+        if m_name and m_name.strip():
+            m_name = m_name.strip()
+            m_slug = (
+                slugify(m_name.lower(), allow_unicode=True)
+                or "manufacturer-slug"
+            )
+
+            manufacturer, _ = Manufacturer.objects.get_or_create(
+                name=m_name, defaults={"country": m_country, "slug": m_slug}
+            )
+            product.manufacturer = manufacturer
+        else:
+            product.manufacturer = None
+
+        product.save()
+
+        product.tags.clear()
+        tag_names = form.cleaned_data.get("tags_input") or []
+        for tag_name in tag_names:
+            tag, _ = Tag.objects.get_or_create(name=tag_name)
+            product.tags.add(tag)
+
+        form.save_m2m()
+
+        self.object = product
+        return HttpResponseRedirect(self.get_success_url())
+
+    def get_success_url(self):
+        return reverse(
+            "shop:product_detail", kwargs={"product_slug": self.object.slug}
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            {
+                "title": "Редактировать позицию",
+                "h1": "Редактирование",
+                "submit_button_text": "Сохранить",
+            }
+        )
+        return context
 
 
-@login_required
-def product_remove_view(request, product_slug):
-    product = get_object_or_404(Product, slug=product_slug)
+class ProductRemoveView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Product
+    template_name = "shop/pages/product_remove_confirm.html"
+    slug_url_kwarg = "product_slug"
+    context_object_name = "product"
+    success_url = reverse_lazy("shop:product_list")
 
-    if request.user != product.owner:
-        return render(request, 'shop/pages/not_allowed.html')
+    def test_func(self):
+        product = self.get_object()
+        return self.request.user == product.owner
 
-    if request.method == "POST":
-        product.delete()
-        return redirect("shop:product_list")
-
-    return render(request, 'shop/pages/product_remove_confirm.html', {'product': product})
+    def handle_no_permission(self):
+        return render(self.request, "shop/pages/not_allowed.html")
