@@ -4,9 +4,10 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.text import slugify
 from .models import Category, Product, Tag, Manufacturer
 from .forms import ProductForm
+from django.views.generic import TemplateView
 
-def home_page_view(request):
-    return render(request, 'shop/pages/index.html')
+class HomePageView(TemplateView):
+    template_name =  'shop/pages/index.html'
 
 def product_list_view(request):
     products = Product.objects.filter(is_active=True)
