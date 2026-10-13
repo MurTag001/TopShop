@@ -55,6 +55,7 @@
   {% endif %}
 </p>
 <p><strong>Добавлен:</strong> {{ product.created_at|date:"d.m.Y" }}</p>
+<p><strong>Дата последнего изменения:</strong> {{ product.updated_at|date:"d.m.Y H:i" }}</p>
 
 <p>Продавец: 
    <a href="{% url "users:profile" username=product.owner.username %}">
