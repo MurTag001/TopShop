@@ -10,11 +10,15 @@
 
 {% block page_content %}
   <h1>Наши товары</h1>
-    <ul class="products-grid">
-      {% for product in products %}
-        {% include 'shop/includes/product_container.html' %}
-      {% empty %}
-      <div>Товаров пока нет.</div>
-      {% endfor %}
-    </ul>
+  
+  <ul class="products-grid">
+    {% for product in products %}
+      {% include 'shop/includes/product_container.html' %}
+    {% empty %}
+      <!-- Если вы видите ЭТУ строку, значит база данных/view отдаёт пустой список -->
+      <li class="no-products">Товаров пока нет.</li>
+    {% endfor %}
+  </ul>
+
+  {% include "shop/includes/pagination.html" %}
 {% endblock page_content %}
