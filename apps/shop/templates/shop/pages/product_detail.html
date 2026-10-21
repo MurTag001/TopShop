@@ -54,8 +54,8 @@
     <span style="color: red;">Нет в наличии</span>
   {% endif %}
 </p>
-<p><strong>Добавлен:</strong> {{ product.created_at|date:"d.m.Y" }}</p>
-<p><strong>Дата последнего изменения:</strong> {{ product.updated_at|date:"d.m.Y H:i" }}</p>
+<p><strong>Добавлен:</strong><span class="date-field">{{ product.created_at|date:"c" }}</span></p>
+<p><strong>Дата последнего изменения:</strong><span class="date-field">{{ product.updated_at|date:"c" }}</span></p>
 
 <p>Продавец: 
    <a href="{% url "users:profile" username=product.owner.username %}">
