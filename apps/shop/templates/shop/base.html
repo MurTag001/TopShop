@@ -32,7 +32,11 @@
                 class="nav-link {% if request.resolver_match.url_name == 'home_page' %}active{% endif %}"
                 href="{% url 'shop:home_page' %}"
               >
-              {% bs_icon 'house' extra_classes='me-1' %}
+                {% if request.resolver_match.url_name == 'home_page' %}
+                  {% bs_icon 'house-fill' extra_classes='me-1' %}
+                {% else %}
+                  {% bs_icon 'house' extra_classes='me-1' %}
+                {% endif %}
               Главная</a>
             </li>
             <li class="nav-item">
