@@ -31,6 +31,7 @@
             {% endif %}
           {% endfor %}
       </div>
+    {% include "shop/includes/pagination.html" %}
   {% else %}
       <p class="mb-4">Этот пользователь еще не добавил ни одного товара.</p>
   {% endif %}

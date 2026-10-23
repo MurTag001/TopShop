@@ -3,7 +3,7 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.views import LoginView as AuthLoginView, LogoutView as AuthLogoutView
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DetailView
-
+from django.views.generic.list import MultipleObjectMixin
 
 User = get_user_model()
 
@@ -31,16 +31,20 @@ class LogoutView(AuthLogoutView):
   next_page = reverse_lazy('shop:home_page')
 
 
-class ProfileView(DetailView):
+class ProfileView(DetailView, MultipleObjectMixin):
     model = User
     slug_url_kwarg = 'username'
     slug_field = 'username'
     template_name = 'users/pages/profile.html'
     context_object_name = 'profile_user'
+    paginate_by = 21
 
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['products_list'] = self.object.products.all()
+        products = self.object.products.all()
+        context = super().get_context_data(object_list=products, **kwargs)
+        context['products_list'] = context['object_list']
+
+        del context['object_list']
         
         return context
