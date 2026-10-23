@@ -5,6 +5,19 @@ from django.utils.text import slugify
 from unidecode import unidecode
 
 
+def generate_unique_slug(instance, name_field):
+    name_val = getattr(instance, name_field)
+    base_slug = slugify(unidecode(name_val))
+    slug = base_slug
+    num = 1
+    model_class = instance.__class__
+    
+    while model_class.objects.filter(slug=slug).exclude(pk=instance.pk).exists():
+        slug = f"{base_slug}-{num}"
+        num += 1
+    return slug
+
+
 class Product(models.Model):
     name = models.CharField(max_length=255, verbose_name="Название товара")
     slug = models.SlugField(max_length=255, unique=True, editable=False)
@@ -37,6 +50,12 @@ class Product(models.Model):
         verbose_name="Владелец товара"
     )
     views = models.PositiveIntegerField(default=0, verbose_name="Просмотры")
+    viewed_by_users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, 
+        related_name='viewed_products',
+        blank=True,
+        verbose_name="Просмотрено пользователями"
+    )
 
 
     class Meta:
@@ -50,7 +69,7 @@ class Product(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(unidecode(self.name))
+            self.slug = generate_unique_slug(self, 'name')
         super().save(*args, **kwargs)
 
 
@@ -108,10 +127,10 @@ class Tag(models.Model):
 
 class Manufacturer(models.Model):
     name = models.CharField(max_length=255, verbose_name="Название")
-    slug = models.SlugField(max_length=255, unique=True, verbose_name="URL-слаг")
+    slug = models.SlugField(max_length=255, unique=True, editable=False, verbose_name="URL-слаг")
     country = models.CharField(max_length=100, verbose_name="Страна")
     website = models.URLField(blank=True, null=True, verbose_name="Сайт")
-    description = models.TextField(verbose_name="Описание")
+    description = models.TextField(verbose_name="Описание", blank=True, null=True)
 
     class Meta:
         verbose_name = "Производитель"
