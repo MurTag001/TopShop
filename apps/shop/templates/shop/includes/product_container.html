@@ -1,3 +1,4 @@
+{% load bootstrap_icons %}
 <div class="product-container">
   <div class="product-body">
     <div class="product-image-wrapper">
@@ -13,16 +14,20 @@
       <a href="{{ product.category.get_absolute_url }}"
         >{{ product.category }}</a
       >
-        {% if product.tags.all %}
-            <div class="product-tags">
-            {% for tag in product.tags.all %}
-            <a href="{% url 'shop:tag_products' tag_slug=tag.slug %}" class="tag-badge">
-            #{{ tag.name }}
-            </a>
-            {% endfor %}
-            </div>
-        {% endif %}
     </p>
+
+    {% if product.tags.all %}
+    <div class="product-tags mb-2">
+      {% for tag in product.tags.all %}
+      <a
+        href="{% url 'shop:tag_products' tag_slug=tag.slug %}"
+        class="tag-badge"
+      >
+        #{{ tag.name }}
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
 
     <h3 class="product-title">
       <a href="{{ product.get_absolute_url }}"
@@ -30,11 +35,25 @@
       >
     </h3>
 
-    <p>
-      {{ product.description|truncatewords:10 }}
-    </p>
+    <p>{{ product.description|truncatewords:10 }}</p>
   </div>
-  <div class="product-footer">
+
+  <div class="product-footer d-flex justify-content-between align-items-center">
     <span class="product-price">{{ product.price }} руб.</span>
+
+    <div class="product-views-block d-flex align-items-center text-muted small">
+  {% if request.user.is_authenticated and product.is_viewed %}
+    <svg xmlns="http://w3.org" width="16" height="16" fill="currentColor" class="bi bi-eye-fill me-1 text-primary" viewBox="0 0 16 16" style="min-width: 16px;">
+      <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0"/>
+      <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8m8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7"/>
+    </svg>
+  {% else %}
+    <svg xmlns="http://w3.org" width="16" height="16" fill="currentColor" class="bi bi-eye me-1" viewBox="0 0 16 16" style="min-width: 16px;">
+      <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
+      <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+    </svg>
+  {% endif %}
+  <span>{{ product.views }}</span>
+</div>
   </div>
 </div>

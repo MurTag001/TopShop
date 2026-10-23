@@ -1,9 +1,8 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.db.models import F, Q
+from django.db.models import F, Q, Exists, OuterRef
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
-from django.utils.text import slugify
 from django.views.generic import (
     CreateView,
     DeleteView,
@@ -22,16 +21,28 @@ class HomePageView(TemplateView):
 
 
 class ProductListView(ListView):
-    queryset = Product.objects.filter(is_active=True)
+    queryset = Product.objects.filter(is_active=True).select_related('category').prefetch_related('tags')
     context_object_name = "products"
     template_name = "shop/pages/product_list.html"
     paginate_by = 21
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        page_products = context["products"]
+        
+        user = self.request.user
+        if user.is_authenticated:
+            viewed_ids = set(user.viewed_products.values_list('id', flat=True))
+            
+            for product in page_products:
+                product.is_viewed = product.id in viewed_ids
+                
+        return context
 
 
 class ShopDetailView(DetailView):
     slug_url_kwarg = "product_slug"
     template_name = "shop/pages/product_detail.html"
-
 
     def get_queryset(self):
         if self.request.user.is_authenticated:
@@ -40,15 +51,18 @@ class ShopDetailView(DetailView):
             )
         return Product.objects.filter(is_active=True)
 
-
     def get_object(self, queryset=None):
         product = super().get_object(queryset)
+        user = self.request.user
 
         session_key = f'product_{product.id}_viewed'
-        if not self.request.session.get(session_key, False) and product.owner != self.request.user:
+        if not self.request.session.get(session_key, False) and product.owner != user:
             Product.objects.filter(id=product.id).update(views=F("views") + 1)
             product.views += 1
             self.request.session[session_key] = True
+
+        if user.is_authenticated and user != product.owner:
+            product.viewed_by_users.add(user)
 
         return product
 
@@ -57,13 +71,11 @@ class CategoryProductsView(ListView):
     context_object_name = "products"
     template_name = "shop/pages/category_products.html"
 
-
     def get_queryset(self):
         self.category = get_object_or_404(
             Category, slug=self.kwargs["category_slug"]
         )
-        return self.category.products.filter(is_active=True)
-
+        return self.category.products.filter(is_active=True).select_related('category', 'manufacturer', 'owner').prefetch_related('tags')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -74,30 +86,43 @@ class CategoryProductsView(ListView):
 class TagProductsView(ListView):
     context_object_name = "products"
     template_name = "shop/pages/tag_products.html"
-
+    paginate_by = 21
 
     def get_queryset(self):
         self.tag = get_object_or_404(Tag, slug=self.kwargs["tag_slug"])
-        return self.tag.products.filter(is_active=True)
-
+        return self.tag.products.filter(is_active=True).select_related('category').prefetch_related('tags')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["tag"] = self.tag
+        
+        page_products = context["products"]
+        user = self.request.user
+        if user.is_authenticated:
+            viewed_ids = set(user.viewed_products.values_list('id', flat=True))
+            for product in page_products:
+                product.is_viewed = product.id in viewed_ids
+                
         return context
 
 
 class ManufacturerProductsView(ListView):
     template_name = "shop/pages/manufacturer_products.html"
     context_object_name = "products"
-
+    paginate_by = 21
 
     def get_queryset(self):
-        self.manufacturer = get_object_or_404(
-            Manufacturer, slug=self.kwargs["manufacturer_slug"]
-        )
-        return self.manufacturer.products.filter(is_active=True)
+        self.manufacturer = get_object_or_404(Manufacturer, slug=self.kwargs["manufacturer_slug"])
+        queryset = self.manufacturer.products.filter(is_active=True).select_related('category').prefetch_related('tags')
 
+        if self.request.user.is_authenticated:
+            is_viewed_subquery = Product.viewed_by_users.through.objects.filter(
+                product_id=OuterRef('pk'),
+                user_id=self.request.user.id
+            )
+            queryset = queryset.annotate(is_viewed=Exists(is_viewed_subquery))
+            
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -110,28 +135,19 @@ class ProductAddView(LoginRequiredMixin, CreateView):
     form_class = ProductForm
     template_name = "shop/pages/product_add.html"
 
-
     def form_valid(self, form):
         product = form.save(commit=False)
         product.owner = self.request.user
 
         m_name = form.cleaned_data.get("manufacturer_input")
-        m_country = (
-            form.cleaned_data.get("manufacturer_country_input") or "Не указана"
-        )
+        m_country = form.cleaned_data.get("manufacturer_country_input") or "Не указана"
 
         if m_name and m_name.strip():
-            m_name = m_name.strip()
-            m_slug = (
-                slugify(m_name.lower(), allow_unicode=True)
-                or "manufacturer-slug"
-            )
-
+            m_name = m_name.strip().title()
             manufacturer, created = Manufacturer.objects.get_or_create(
                 name=m_name,
                 defaults={
                     "country": m_country,
-                    "slug": m_slug,
                     "description": f"Производитель {m_name}",
                 },
             )
@@ -143,20 +159,19 @@ class ProductAddView(LoginRequiredMixin, CreateView):
 
         tag_names = form.cleaned_data.get("tags_input") or []
         for tag_name in tag_names:
-            tag, _ = Tag.objects.get_or_create(name=tag_name)
-            product.tags.add(tag)
+            if tag_name.strip():
+                normalized_tag = tag_name.strip().lower()
+                tag, _ = Tag.objects.get_or_create(name=normalized_tag)
+                product.tags.add(tag)
 
         form.save_m2m()
-
         self.object = product
         return HttpResponseRedirect(self.get_success_url())
-
 
     def get_success_url(self):
         return reverse(
             "shop:product_detail", kwargs={"product_slug": self.object.slug}
         )
-
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -175,9 +190,7 @@ class ProductEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     form_class = ProductForm
     template_name = "shop/pages/product_form.html"
     slug_url_kwarg = "product_slug"
-
     _cached_object = None
-
 
     def get_object(self, queryset=None):
         if self._cached_object is None:
@@ -188,20 +201,16 @@ class ProductEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
             condition = Q(slug=product_slug) & (
                 Q(is_active=True) | Q(owner=self.request.user)
             )
-
             self._cached_object = get_object_or_404(queryset, condition)
 
         return self._cached_object
-
 
     def test_func(self):
         product = self.get_object()
         return self.request.user == product.owner
 
-
     def handle_no_permission(self):
         return render(self.request, "shop/pages/not_allowed.html")
-
 
     def get_initial(self):
         initial = super().get_initial()
@@ -209,31 +218,22 @@ class ProductEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
         if product.manufacturer:
             initial["manufacturer_input"] = product.manufacturer.name
-            initial["manufacturer_country_input"] = (
-                product.manufacturer.country
-            )
+            initial["manufacturer_country_input"] = product.manufacturer.country
 
         initial["tags_input"] = ", ".join(tag.name for tag in product.tags.all())
         return initial
-
 
     def form_valid(self, form):
         product = form.save(commit=False)
 
         m_name = form.cleaned_data.get("manufacturer_input")
-        m_country = (
-            form.cleaned_data.get("manufacturer_country_input") or "Не указана"
-        )
+        m_country = form.cleaned_data.get("manufacturer_country_input") or "Не указана"
 
         if m_name and m_name.strip():
-            m_name = m_name.strip()
-            m_slug = (
-                slugify(m_name.lower(), allow_unicode=True)
-                or "manufacturer-slug"
-            )
-
+            m_name = m_name.strip().title()
             manufacturer, _ = Manufacturer.objects.get_or_create(
-                name=m_name, defaults={"country": m_country, "slug": m_slug}
+                name=m_name, 
+                defaults={"country": m_country}
             )
             product.manufacturer = manufacturer
         else:
@@ -244,20 +244,19 @@ class ProductEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         product.tags.clear()
         tag_names = form.cleaned_data.get("tags_input") or []
         for tag_name in tag_names:
-            tag, _ = Tag.objects.get_or_create(name=tag_name)
-            product.tags.add(tag)
+            if tag_name.strip():
+                normalized_tag = tag_name.strip().lower()
+                tag, _ = Tag.objects.get_or_create(name=normalized_tag)
+                product.tags.add(tag)
 
         form.save_m2m()
-
         self.object = product
         return HttpResponseRedirect(self.get_success_url())
-
 
     def get_success_url(self):
         return reverse(
             "shop:product_detail", kwargs={"product_slug": self.object.slug}
         )
-
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -278,11 +277,9 @@ class ProductRemoveView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     context_object_name = "product"
     success_url = reverse_lazy("shop:product_list")
 
-
     def test_func(self):
         product = self.get_object()
         return self.request.user == product.owner
-
 
     def handle_no_permission(self):
         return render(self.request, "shop/pages/not_allowed.html")
