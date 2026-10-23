@@ -63,10 +63,10 @@
                   {{ request.user }}
                 </a>
               </li>
-              <li class="nav-item">
-                <form class="nav-link" method="POST" action="{% url 'users:logout' %}">
+              <li class="nav-item d-flex align-items-center">
+                <form method="POST" action="{% url 'users:logout' %}" class="m-0 p-0">
                   {% csrf_token %}
-                  <button type="submit" class="btn text-muted border-0 p-0">
+                  <button type="submit" class="nav-link btn btn-link border-0 text-start shadow-none py-2 px-3">
                     {% bs_icon 'box-arrow-left' extra_classes='me-1' %}
                     Выйти
                   </button>
@@ -102,7 +102,7 @@
 
 <footer>&copy; Все права защищены 2026</footer>
 
-<button id="scrollToTopBtn" class="scroll-to-top disabled">
+<button id="scrollToTopBtn" type="button" class="scroll-to-top disabled">
     {% bs_icon 'arrow-up' size="25px" %}
 </button>
 
