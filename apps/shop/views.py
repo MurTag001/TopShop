@@ -1,5 +1,5 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.db.models import Q
+from django.db.models import F, Q
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
@@ -32,6 +32,7 @@ class ShopDetailView(DetailView):
     slug_url_kwarg = "product_slug"
     template_name = "shop/pages/product_detail.html"
 
+
     def get_queryset(self):
         if self.request.user.is_authenticated:
             return Product.objects.filter(
@@ -40,15 +41,29 @@ class ShopDetailView(DetailView):
         return Product.objects.filter(is_active=True)
 
 
+    def get_object(self, queryset=None):
+        product = super().get_object(queryset)
+
+        session_key = f'product_{product.id}_viewed'
+        if not self.request.session.get(session_key, False) and product.owner != self.request.user:
+            Product.objects.filter(id=product.id).update(views=F("views") + 1)
+            product.views += 1
+            self.request.session[session_key] = True
+
+        return product
+
+
 class CategoryProductsView(ListView):
     context_object_name = "products"
     template_name = "shop/pages/category_products.html"
+
 
     def get_queryset(self):
         self.category = get_object_or_404(
             Category, slug=self.kwargs["category_slug"]
         )
         return self.category.products.filter(is_active=True)
+
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -60,9 +75,11 @@ class TagProductsView(ListView):
     context_object_name = "products"
     template_name = "shop/pages/tag_products.html"
 
+
     def get_queryset(self):
         self.tag = get_object_or_404(Tag, slug=self.kwargs["tag_slug"])
         return self.tag.products.filter(is_active=True)
+
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -74,11 +91,13 @@ class ManufacturerProductsView(ListView):
     template_name = "shop/pages/manufacturer_products.html"
     context_object_name = "products"
 
+
     def get_queryset(self):
         self.manufacturer = get_object_or_404(
             Manufacturer, slug=self.kwargs["manufacturer_slug"]
         )
         return self.manufacturer.products.filter(is_active=True)
+
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -90,6 +109,7 @@ class ProductAddView(LoginRequiredMixin, CreateView):
     model = Product
     form_class = ProductForm
     template_name = "shop/pages/product_add.html"
+
 
     def form_valid(self, form):
         product = form.save(commit=False)
@@ -131,10 +151,12 @@ class ProductAddView(LoginRequiredMixin, CreateView):
         self.object = product
         return HttpResponseRedirect(self.get_success_url())
 
+
     def get_success_url(self):
         return reverse(
             "shop:product_detail", kwargs={"product_slug": self.object.slug}
         )
+
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -156,6 +178,7 @@ class ProductEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
     _cached_object = None
 
+
     def get_object(self, queryset=None):
         if self._cached_object is None:
             if queryset is None:
@@ -170,12 +193,15 @@ class ProductEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
         return self._cached_object
 
+
     def test_func(self):
         product = self.get_object()
         return self.request.user == product.owner
 
+
     def handle_no_permission(self):
         return render(self.request, "shop/pages/not_allowed.html")
+
 
     def get_initial(self):
         initial = super().get_initial()
@@ -189,6 +215,7 @@ class ProductEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
         initial["tags_input"] = ", ".join(tag.name for tag in product.tags.all())
         return initial
+
 
     def form_valid(self, form):
         product = form.save(commit=False)
@@ -225,10 +252,12 @@ class ProductEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         self.object = product
         return HttpResponseRedirect(self.get_success_url())
 
+
     def get_success_url(self):
         return reverse(
             "shop:product_detail", kwargs={"product_slug": self.object.slug}
         )
+
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -249,9 +278,11 @@ class ProductRemoveView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     context_object_name = "product"
     success_url = reverse_lazy("shop:product_list")
 
+
     def test_func(self):
         product = self.get_object()
         return self.request.user == product.owner
+
 
     def handle_no_permission(self):
         return render(self.request, "shop/pages/not_allowed.html")
