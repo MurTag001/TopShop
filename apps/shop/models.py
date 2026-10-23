@@ -36,6 +36,7 @@ class Product(models.Model):
         related_name='products',
         verbose_name="Владелец товара"
     )
+    views = models.PositiveIntegerField(default=0, verbose_name="Просмотры")
 
 
     class Meta:
