@@ -106,6 +106,34 @@ class TagProductsView(ListView):
         return context
 
 
+class ProductsSearchView(ListView):
+    model = Product
+    template_name = "shop/pages/products_search.html"
+    context_object_name = 'products'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search_performed'] = bool(self.request.GET.get("q"))
+        return context
+
+    def get_queryset(self):
+        search_query = self.request.GET.get("q")
+        if search_query:
+            queryset = Product.objects.filter(is_active=True)
+            condition = Q(name__icontains=search_query) | Q(description__icontains=search_query)
+            search_in_categories = self.request.GET.get("in_categories") == 'on'
+            search_in_tags = self.request.GET.get("in_tags") == 'on'
+            search_in_manufacturer = self.request.GET.get("in_manufacturer") == 'on'
+            if search_in_categories:
+                condition |= Q(category__name__icontains=search_query)
+            if search_in_tags:
+                condition |= Q(tags__name__icontains=search_query)
+            if search_in_manufacturer:
+                condition |= Q(manufacturer__name__icontains=search_query)
+            return queryset.filter(condition).distinct()
+        return Product.objects.none()
+
+    
 class ManufacturerProductsView(ListView):
     template_name = "shop/pages/manufacturer_products.html"
     context_object_name = "products"

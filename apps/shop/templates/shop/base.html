@@ -49,6 +49,19 @@
             </li>
             <li class="nav-item">
               <a
+                class="nav-link {% if request.resolver_match.url_name == 'products_search' %}active{% endif %}"
+                href="{% url 'shop:products_search' %}"
+              >
+                {% if request.resolver_match.url_name == 'products_search' %}
+                  {% bs_icon 'search-heart-fill' extra_classes='me-1' %}
+                {% else %}
+                  {% bs_icon 'search-heart' extra_classes='me-1' %}
+                {% endif %}
+                Поиск товаров
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
                 class="nav-link {% if request.resolver_match.url_name == 'product_add' %}active{% endif %}"
                 href="{% url 'shop:product_add' %}"
               >

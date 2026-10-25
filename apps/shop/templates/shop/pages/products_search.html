@@ -1,0 +1,72 @@
+{% extends "shop/base.html" %}
+{% load static %}
+
+{% block page_title %}
+  TopShop | Поиск товаров
+{% endblock page_title %}
+
+{% block styles %}
+  <link rel="stylesheet" href="{% static 'shop/css/pages/products_search.css' %}">
+  <link rel="stylesheet" href="{% static 'shop/css/includes/product_container.css' %}">
+{% endblock styles %}
+
+{% block page_content %}
+  <h1>Поиск товаров</h1>
+
+  <form>
+    <input
+      type="text"
+      name="q"
+      value="{{ request.GET.q }}"
+      placeholder="Введите ваш запрос"
+      autocomplete="off"
+      spellcheck="false"
+    >
+
+    <label>
+      <input
+        type="checkbox"
+        name="in_categories"
+        {% if request.GET.in_categories %}checked{% endif %}
+      >
+      Искать в категориях
+    </label>
+
+    <label>
+      <input
+        type="checkbox"
+        name="in_tags"
+        {% if request.GET.in_tags %}checked{% endif %}
+      >
+      Искать в тегах
+    </label>
+
+    <label>
+      <input
+        type="checkbox"
+        name="in_manufacturer"
+        {% if request.GET.in_manufacturer %}checked{% endif %}
+      >
+      Искать в производителях
+    </label>
+
+    <button type="submit">Найти</button>
+    <button type="reset">Очистить</button>
+  </form>
+
+  {% if search_performed %}
+    {% if products %}
+      <h2>Найден(-о) {{ paginator.count }} товар(-а, -ов):</h2>
+
+      {% for product in products %}
+        {% include 'shop/includes/product_container.html' %}
+      {% endfor %}
+
+      {% include "shop/includes/pagination.html" %}
+    {% else %}
+      <p>По вашему запросу ничего не найдено.</p>
+    {% endif %}
+  {% else %}
+    <p>Введите запрос для поиска товаров</p>
+  {% endif %}
+{% endblock page_content %}
