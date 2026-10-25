@@ -83,6 +83,11 @@ class ProductForm(forms.ModelForm):
     }
         
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['category'].empty_label = "- Категория -"
+
+
     def clean_name(self):
         name = self.cleaned_data.get('name', '').strip()
         if len(name) < 6:
