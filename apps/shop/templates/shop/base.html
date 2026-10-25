@@ -16,10 +16,10 @@
   <script src="{% static 'js/base.js' %}" type="module" defer></script>
 </head>
 
-<body>
+<body class="d-flex flex-column min-vh-100">
 
   <header>
-    <nav class="navbar navbar-expand-sm bg-dark" data-bs-theme="dark">
+    <nav class="navbar navbar-expand-sm  rounded-bottom border-bottom border-primary bg-dark" data-bs-theme="dark">
       <div class="container-fluid">
         <a class="navbar-brand" href="{% url 'shop:home_page' %}">TopShop</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -115,9 +115,15 @@
     </nav>
   </header>
 
-  <main>{% block page_content %}{% endblock page_content %}</main>
+  <main class="flex-grow-1">{% block page_content %}{% endblock page_content %}</main>
 
-<footer>&copy; Все права защищены 2026</footer>
+  <footer class="bg-dark text-white rounded-top border-top border-primary py-3">
+    <div class="container-fluid">
+      <div class="text-center">
+        &copy; Все права защищены 2026
+      </div>
+    </div>
+  </footer>
 
 <button id="scrollToTopBtn" type="button" class="scroll-to-top disabled">
     {% bs_icon 'arrow-up' size="25px" %}
