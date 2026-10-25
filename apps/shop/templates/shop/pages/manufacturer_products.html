@@ -1,6 +1,11 @@
 {% extends "shop/base.html" %}
+{% load static %}
 
 {% block page_title %}TopShop | Товары производителя {{ manufacturer.name }}{% endblock page_title %}
+
+{% block styles %}
+  <link rel="stylesheet" href="{% static 'shop/css/includes/product_container.css' %}">
+{% endblock styles %}
 
 {% block page_content %}
 <div class="container">
@@ -21,13 +26,13 @@
 
     <h2>Ассортимент:</h2>
     {% if products %}
-        <div class="products-list">
+        <div class="products-grid">
             {% for product in products %}
-                <div class="product-item" style="margin-bottom: 20px;">
-                    <h3><a href="{{ product.get_absolute_url }}">{{ product.name }}</a></h3>
-                    <p>Цена: {{ product.price|floatformat:2 }} руб.</p>
-                </div>
+                {% include 'shop/includes/product_container.html' %}
             {% endfor %}
+        </div>
+        <div class="mt-4">
+            {% include "shop/includes/pagination.html" %}
         </div>
     {% else %}
         <p>У данного производителя пока нет активных товаров в магазине.</p>

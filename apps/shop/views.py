@@ -70,6 +70,7 @@ class ShopDetailView(DetailView):
 class CategoryProductsView(ListView):
     context_object_name = "products"
     template_name = "shop/pages/category_products.html"
+    paginate_by = 21
 
     def get_queryset(self):
         self.category = get_object_or_404(
@@ -140,9 +141,17 @@ class ManufacturerProductsView(ListView):
     context_object_name = "products"
     paginate_by = 21
 
+    def dispatch(self, request, *args, **kwargs):
+        self.manufacturer = get_object_or_404(
+            Manufacturer, 
+            slug=self.kwargs["manufacturer_slug"]
+        )
+        return super().dispatch(request, *args, **kwargs)
+
     def get_queryset(self):
-        self.manufacturer = get_object_or_404(Manufacturer, slug=self.kwargs["manufacturer_slug"])
-        queryset = self.manufacturer.products.filter(is_active=True).select_related('category').prefetch_related('tags')
+        queryset = self.manufacturer.products.filter(
+            is_active=True
+        ).select_related('category').prefetch_related('tags')
 
         if self.request.user.is_authenticated:
             is_viewed_subquery = Product.viewed_by_users.through.objects.filter(
@@ -151,7 +160,7 @@ class ManufacturerProductsView(ListView):
             )
             queryset = queryset.annotate(is_viewed=Exists(is_viewed_subquery))
             
-        return queryset
+        return queryset.order_by('-created_at')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
