@@ -1,7 +1,7 @@
 {% extends "shop/base.html" %}
 {% load static %}
 
-{% block page_title %}TopShop | Товары производителя {{ manufacturer.name }}{% endblock page_title %}
+{% block page_title %}{{ block.super }} | Товары производителя {{ manufacturer.name }}{% endblock page_title %}
 
 {% block styles %}
   <link rel="stylesheet" href="{% static 'shop/css/includes/product_container.css' %}">

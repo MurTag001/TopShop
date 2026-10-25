@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block page_title %}
-  TopShop | Товары с тегом {{ tag }}
+  {{ block.super }} | Товары с тегом {{ tag }}
 {% endblock page_title %}
 
 {% block styles %}

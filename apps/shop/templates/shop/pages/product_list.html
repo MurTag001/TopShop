@@ -1,7 +1,7 @@
 {% extends "shop/base.html" %}
 {% load static %}
 
-{% block page_title %}TopShop | Все товары{% endblock page_title %}
+{% block page_title %}{{ block.super }} | Все товары{% endblock page_title %}
 
 {% block styles %}
   <link rel="stylesheet" href="{% static 'shop/css/pages/product_list.css' %}">
