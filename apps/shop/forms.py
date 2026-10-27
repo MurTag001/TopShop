@@ -1,5 +1,5 @@
 from django import forms
-from .models import Product
+from .models import Product, Review, Comment
 
 class ProductForm(forms.ModelForm):
       
@@ -102,3 +102,22 @@ class ProductForm(forms.ModelForm):
             if tag_name.strip()
         ]
         return tag_names
+
+
+class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = Review
+        fields = ['rating', 'text']
+        widgets = {
+            'rating': forms.Select(attrs={'class': 'form-select'}),
+            'text': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Напишите ваш отзыв здесь...'}),
+        }
+
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['text']
+        widgets = {
+            'text': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Ответить на отзыв...'}),
+        }

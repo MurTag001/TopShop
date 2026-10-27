@@ -1,73 +1,118 @@
 {% extends "shop/base.html" %}
 {% load bootstrap_icons %}
 
-{% block page_title %}{{ block.super }} | {{ product.name }}
-{% endblock page_title %}
+{% block page_title %}{{ block.super }} | {{ product.name }}{% endblock page_title %}
 
 {% block page_content %}
+<div class="container py-4">
+    <!-- Навигация назад -->
+    <div class="mb-4">
+        <a href="javascript:history.back()" class="text-decoration-none text-muted">
+            {% bs_icon 'arrow-left' extra_classes='me-1' %}Назад
+        </a>
+    </div>
 
-    <a href="javascript:history.back()">&larr; Назад</a>
+    <!-- Основная карточка товара -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-5" style="background: #ffffff;">
+        <div class="row g-4">
+            <!-- Блок изображения -->
+            <div class="col-md-4 text-center">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-fluid rounded-4 shadow-sm" style="max-height: 300px; object-fit: cover;">
+                {% else %}
+                    <div class="d-flex flex-column align-items-center justify-content-center bg-light rounded-4 w-100" style="height: 250px; color: #a0aec0;">
+                        {% bs_icon 'image' size='2.5rem' extra_classes='mb-2' %}
+                        <span>Нет изображения</span>
+                    </div>
+                {% endif %}
+            </div>
 
-<h1>Описание товара</h1>
-<h2>ID товара: {{ product.id }}</h2>
-<h3>{{ product.name }}</h3>
+            <!-- Блок информации -->
+            <div class="col-md-8">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                    <div>
+                        <span class="badge bg-light text-secondary mb-1">ID: {{ product.id }}</span>
+                        <h1 class="fw-bold text-dark h3 mb-2">{{ product.name }}</h1>
+                    </div>
+                    <div class="text-end">
+                        <span class="h4 fw-bold text-primary d-block mb-1">{{ product.price|floatformat:2 }} руб.</span>
+                        {% if product.stock > 0 %}
+                            <span class="badge bg-success-subtle text-success">В наличии ({{ product.stock }} шт.)</span>
+                        {% else %}
+                            <span class="badge bg-danger-subtle text-danger">Нет в наличии</span>
+                        {% endif %}
+                    </div>
+                </div>
 
-<p>Категория: <a href="{{ product.category.get_absolute_url }}">{{ product.category }}</a></p>
+                <hr class="text-black-50 my-3">
 
-<p>
-  Теги:
-  {% for tag in product.tags.all %}
-    <a href="{{ tag.get_absolute_url }}">{{ tag }}</a>{% if not forloop.last %}, {% endif %}
-  {% empty %}
-    нет тегов
-  {% endfor %}
-</p>
+                <!-- Метаданные -->
+                <div class="row g-2 small text-secondary mb-3">
+                    <div class="col-sm-6">
+                        <strong>Категория:</strong> <a href="{{ product.category.get_absolute_url }}" class="text-decoration-none text-dark fw-medium">{{ product.category }}</a>
+                    </div>
+                    {% if product.manufacturer %}
+                    <div class="col-sm-6">
+                        <strong>Производитель:</strong> <a href="{{ product.manufacturer.get_absolute_url }}" class="text-decoration-none text-dark fw-medium">{{ product.manufacturer.name }}</a> <span class="text-muted">({{ product.manufacturer.country }})</span>
+                    </div>
+                    {% endif %}
+                </div>
 
-{% if product.manufacturer %}
-    <p>
-        <strong>Производитель:</strong> 
-        <a href="{{ product.manufacturer.get_absolute_url }}">{{ product.manufacturer.name }}</a> 
-        ({{ product.manufacturer.country }})
-{% endif %}
+                <!-- Теги -->
+                <div class="mb-3">
+                    <span class="small text-secondary d-block mb-1">Теги:</span>
+                    {% for tag in product.tags.all %}
+                        <a href="{{ tag.get_absolute_url }}" class="badge bg-light text-secondary text-decoration-none border me-1">#{{ tag.name }}</a>
+                    {% empty %}
+                        <span class="text-muted small">нет тегов</span>
+                    {% endfor %}
+                </div>
 
- {% if request.user == product.owner %}
-    <p><strong>Модерация:</strong> 
-      {% if product.is_active %}
-        <span style="color: green;">Активен</span>
-      {% else %}
-        <span style="color: orange;">Черновик / Деактивирован</span>
-      {% endif %}
-    </p>
-  {% endif %}
+                <!-- Характеристики -->
+                <div class="mb-4">
+                    <h6 class="fw-bold text-dark mb-2">Описание товара</h6>
+                    <p class="text-secondary" style="line-height: 1.6;">{{ product.description }}</p>
+                </div>
 
-{% if product.image %}
-    <img src="{{ product.image.url }}" alt="{{ product.name }}" width="200">
-{% else %}
-    <p>Нет изображения</p>
-{% endif %}
+                <!-- Продавец и Статистика -->
+                <div class="d-flex justify-content-between align-items-center bg-light rounded-3 p-3 mt-auto">
+                    <div class="small">
+                        <span class="text-secondary">Продавец:</span>
+                        <a href="{% url 'users:profile' username=product.owner.username %}" class="fw-bold text-dark text-decoration-none ms-1">
+                            {{ product.owner.username }}
+                        </a>
+                    </div>
+                    <div class="text-muted small d-flex align-items-center gap-3">
+                        <span>{% bs_icon 'eye' extra_classes='me-1' %}{{ product.views }}</span>
+                        {% if request.user == product.owner %}
+                            {% if product.is_active %}
+                                <span class="text-success fw-medium">{% bs_icon 'check-circle' extra_classes='me-1' %}Активен</span>
+                            {% else %}
+                                <span class="text-warning fw-medium">{% bs_icon 'exclamation-circle' extra_classes='me-1' %}Черновик</span>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
 
-<p><strong>Характеристики:</strong> {{ product.description }}</p>
-<p><strong>Цена:</strong> {{ product.price|floatformat:2 }} руб.</p>
-<p><strong>Статус:</strong> 
-  {% if product.stock > 0 %}
-    В наличии ({{ product.stock }} шт.)
-  {% else %}
-    <span style="color: red;">Нет в наличии</span>
-  {% endif %}
-</p>
-<p><strong>Добавлен:</strong><span class="date-field">{{ product.created_at|date:"c" }}</span></p>
-<p><strong>Дата последнего изменения:</strong><span class="date-field">{{ product.updated_at|date:"c" }}</span></p>
+                <!-- Даты и управление владельца -->
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3 pt-2 border-top border-light">
+                    <div class="text-muted" style="font-size: 0.75rem;">
+                        <span>Добавлен: {{ product.created_at|date:"d.m.Y" }}</span>
+                        <span class="ms-3">Изменен: {{ product.updated_at|date:"d.m.Y" }}</span>
+                    </div>
+                    
+                    {% if request.user == product.owner %}
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'shop:product_edit' product_slug=product.slug %}" class="btn btn-sm btn-outline-secondary rounded-3">Редактировать</a>
+                            <a href="{% url 'shop:product_remove' product_slug=product.slug %}" class="btn btn-sm btn-outline-danger rounded-3">Удалить</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 
-<p>Продавец: 
-   <a href="{% url "users:profile" username=product.owner.username %}">
-      {{ product.owner.username }}
-   </a>
-   {% bs_icon 'eye' extra_classes='me-1' %}{{ product.views }}
-</p>
-
-{% if request.user == product.owner %}
-<a href="{% url 'shop:product_edit' product_slug=product.slug %}">Редактировать</a>
-<a href="{% url 'shop:product_remove' product_slug=product.slug %}">Удалить</a>
-{% endif %}
-
+    <!-- Подключаемый блок отзывов -->
+    {% include "shop/includes/reviews.html" %}
+</div>
 {% endblock page_content %}

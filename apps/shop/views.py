@@ -1,7 +1,7 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import F, Q, Exists, OuterRef
-from django.http import HttpResponseRedirect
-from django.shortcuts import get_object_or_404, render
+from django.http import HttpResponseRedirect, JsonResponse
+from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import (
     CreateView,
@@ -12,8 +12,8 @@ from django.views.generic import (
     UpdateView,
 )
 
-from .forms import ProductForm
-from .models import Category, Manufacturer, Product, Tag
+from .forms import ProductForm, ReviewForm, CommentForm
+from .models import Category, Manufacturer, Product, Tag, Review
 
 
 class HomePageView(TemplateView):
@@ -65,6 +65,91 @@ class ShopDetailView(DetailView):
             product.viewed_by_users.add(user)
 
         return product
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        context['reviews'] = (
+            self.object.reviews.filter(is_active=True)
+            .select_related('user')
+            .prefetch_related('comments__user')
+        )
+        
+        context['review_form'] = ReviewForm()
+        context['comment_form'] = CommentForm()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        # Получаем текущий объект товара, чтобы привязать к нему отзыв и выполнить редирект
+        self.object = self.get_object()
+
+        # Проверяем, является ли запрос AJAX-запросом
+        is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
+
+        # Защита: неавторизованные пользователи не могут отправлять формы
+        if not request.user.is_authenticated:
+            if is_ajax:
+                return JsonResponse({'error': 'Вы должны быть авторизованы'}, status=403)
+            return redirect('users:login')
+        
+        # Сценарий А: Пользователь отправляет отзыв
+        if 'submit_review' in request.POST or (is_ajax and request.POST.get('action') == 'submit_review'):
+            review_form = ReviewForm(request.POST)
+            if review_form.is_valid():
+                review = review_form.save(commit=False)
+                review.product = self.object
+                review.user = request.user
+                review.save()
+
+                if is_ajax:
+                    return JsonResponse({
+                        'status': 'success',
+                        'username': review.user.username,
+                        'rating': review.get_rating_display(),
+                        'text': review.text,
+                        'created_at': review.created_at.isoformat(),  # Передаем точную ISO-строку времени в UTC
+                        'review_id': review.id
+                    })
+                return redirect(self.object.get_absolute_url())
+            
+            if is_ajax:
+                return JsonResponse({'status': 'error', 'errors': review_form.errors}, status=400)
+
+        # Сценарий Б: Пользователь отвечает комментарием на отзыв
+        elif 'submit_comment' in request.POST or (is_ajax and request.POST.get('action') == 'submit_comment'):
+            comment_form = CommentForm(request.POST)
+            review_id = request.POST.get('review_id')
+            # Безопасно получаем отзыв, проверяя, что он привязан к текущему товару
+            review = get_object_or_404(Review, id=review_id, product=self.object)
+            
+            if comment_form.is_valid():
+                comment = comment_form.save(commit=False)
+                comment.review = review
+                comment.user = request.user
+                comment.save()
+
+                if is_ajax:
+                    return JsonResponse({
+                        'status': 'success',
+                        'username': comment.user.username,
+                        'text': comment.text,
+                        'created_at': comment.created_at.isoformat(),  # Передаем точную ISO-строку времени в UTC
+                        'review_id': review_id
+                    })
+                return redirect(self.object.get_absolute_url())
+
+            if is_ajax:
+                return JsonResponse({'status': 'error', 'errors': comment_form.errors}, status=400)
+
+        # Стандартный fallback-сценарий (для обычных HTML-форм без AJAX при ошибках валидации)
+        context = self.get_context_data(object=self.object)
+        if 'submit_review' in request.POST:
+            context['review_form'] = review_form
+        elif 'submit_comment' in request.POST:
+            context['comment_form'] = comment_form
+            
+        return self.render_to_response(context)
+
 
 
 class CategoryProductsView(ListView):

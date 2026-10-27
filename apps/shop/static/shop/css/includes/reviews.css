@@ -1,0 +1,124 @@
+/* Современный чистый дизайн интерфейса отзывов */
+.reviews-section {
+    max-width: 100%;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.section-title {
+    font-weight: 700;
+    color: #1a1a1a;
+    letter-spacing: -0.5px;
+}
+
+.review-card {
+    border: 1px solid #eef2f5 !important;
+    border-radius: 16px !important;
+    background: #ffffff;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.review-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04) !important;
+}
+
+.avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    background: #f0f3f6;
+    color: #6c757d;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.badge-rating {
+    background-color: #fff9e6 !important;
+    color: #ffb300 !important;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 6px 12px !important;
+    border-radius: 8px;
+    border: 1px solid #ffe8cc;
+}
+
+/* Анимация плавного появления новых отзывов/комментариев */
+.animate-fade-in {
+    animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Стилизация блока комментариев */
+.comments-wrapper {
+    background-color: #f8fafc;
+    border-radius: 12px;
+    border-left: 3px solid #dee2e6;
+}
+
+.comment-item {
+    border-bottom: 1px solid #edf2f7;
+}
+
+.comment-item:last-child {
+    border-bottom: none;
+}
+
+/* Кастомные поля ввода */
+.custom-form-control {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    transition: all 0.2s ease;
+    resize: none;
+}
+
+.custom-form-control:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    outline: none;
+}
+
+.custom-select {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+/* Кнопки */
+.btn-submit-primary {
+    background: #1e1e1e;
+    color: #fff;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-weight: 500;
+    border: none;
+    transition: background 0.2s ease;
+}
+
+.btn-submit-primary:hover {
+    background: #333333;
+    color: #fff;
+}
+
+.btn-reply-outline {
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    padding: 4px 12px;
+    background: #fff;
+    transition: all 0.2s ease;
+}
+
+.btn-reply-outline:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    color: #1e293b;
+}

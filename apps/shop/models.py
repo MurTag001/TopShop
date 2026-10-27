@@ -63,6 +63,7 @@ class Product(models.Model):
         verbose_name_plural = "Товары"
         ordering = ['-created_at']
 
+
     def get_absolute_url(self):
         return reverse('shop:product_detail', kwargs={'product_slug': self.slug})
 
@@ -72,6 +73,11 @@ class Product(models.Model):
             self.slug = generate_unique_slug(self, 'name')
         super().save(*args, **kwargs)
 
+
+    def get_average_rating(self):
+        from django.db.models import Avg
+        result = self.reviews.filter(is_active=True).aggregate(Avg('rating'))['rating__avg']
+        return round(result, 1) if result else 0
 
     def __str__(self):
         return self.name
@@ -141,3 +147,67 @@ class Manufacturer(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Review(models.Model):
+    RATING_CHOICES = [
+        (1, '★☆☆☆☆ (1)'),
+        (2, '★★☆☆☆ (2)'),
+        (3, '★★★☆☆ (3)'),
+        (4, '★★★★☆ (4)'),
+        (5, '★★★★★ (5)'),
+    ]
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name="Товар"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name="Автор отзыва"
+    )
+    rating = models.PositiveSmallIntegerField(
+        choices=RATING_CHOICES,
+        verbose_name="Оценка"
+    )
+    text = models.TextField(verbose_name="Текст отзыва")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата добавления")
+    is_active = models.BooleanField(default=True, verbose_name="Активен (модерация)")
+
+    class Meta:
+        verbose_name = "Отзыв"
+        verbose_name_plural = "Отзывы"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Отзыв от {self.user.username} на {self.product.name} ({self.rating}/5)"
+
+
+class Comment(models.Model):
+    review = models.ForeignKey(
+        Review,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name="Отзыв"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='review_comments',
+        verbose_name="Автор комментария"
+    )
+    text = models.TextField(verbose_name="Текст комментария")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата добавления")
+    is_active = models.BooleanField(default=True, verbose_name="Активен (модерация)")
+
+    class Meta:
+        verbose_name = "Комментарий к отзыву"
+        verbose_name_plural = "Комментарии к отзывам"
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"Комментарий от {self.user.username} к отзыву #{self.review.id}"

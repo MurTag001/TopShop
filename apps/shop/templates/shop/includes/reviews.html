@@ -1,0 +1,166 @@
+{% load static %}
+{% load bootstrap_icons %}
+
+<!-- Подключаем внешние стили отзывов -->
+<link rel="stylesheet" href="{% static 'shop/css/includes/reviews.css' %}">
+
+<div class="reviews-section mt-4">
+    <h3 class="section-title mb-4">
+        Отзывы покупателей 
+        <span class="text-muted fs-5 fw-normal ms-2">(<span id="reviews-count">{{ reviews.count }}</span>)</span>
+    </h3>
+    
+    <div id="reviews-container">
+        {% for review in reviews %}
+            <div class="card mb-4 shadow-sm review-card" id="review-card-{{ review.id }}">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-placeholder review-avatar me-3">
+                                {{ review.user.username|slice:":1"|upper }}
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold text-dark review-username">{{ review.user.username }}</h6>
+                                <small class="text-muted">
+                                    {% bs_icon 'clock' extra_classes='me-1' %}<span class="review-date" data-raw-date="{{ review.created_at|date:'c' }}"></span>
+                                </small>
+                            </div>
+                        </div>
+                        <span class="badge badge-rating">
+                            {% bs_icon 'star-fill' extra_classes='me-1' %}<span class="review-rating-text">{{ review.get_rating_display }}</span>
+                        </span>
+                    </div>
+                    <p class="card-text text-secondary mb-4 review-text" style="line-height: 1.6;">{{ review.text }}</p>
+
+                    <div class="ms-0 ms-md-4 comments-wrapper p-3 mt-3">
+                        <div class="d-flex align-items-center mb-3">
+                            {% bs_icon 'chat-left-text' extra_classes='text-muted me-2' %}
+                            <span class="fw-semibold text-secondary small">Комментарии и ответы</span>
+                        </div>
+                        
+                        <div id="comments-list-{{ review.id }}" class="comments-list">
+                            {% for comment in review.comments.all %}
+                                {% if comment.is_active %}
+                                    <div class="mb-2 pb-2 comment-item">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span class="small text-dark fw-bold comment-username">{{ comment.user.username }}</span>
+                                            <span class="text-muted small comment-date" data-raw-date="{{ comment.created_at|date:'c' }}"></span>
+                                        </div>
+                                        <p class="mb-0 small text-secondary comment-text">{{ comment.text }}</p>
+                                    </div>
+                                {% endif %}
+                            {% empty %}
+                                <p class="text-muted small no-comments-text mb-0 py-2">К этому отзыву пока нет комментариев.</p>
+                            {% endfor %}
+                        </div>
+
+                        {% if user.is_authenticated %}
+                            <form method="post" class="mt-3 ajax-comment-form" data-review-id="{{ review.id }}">
+                                {% csrf_token %}
+                                <input type="hidden" name="review_id" value="{{ review.id }}">
+                                <input type="hidden" name="action" value="submit_comment">
+                                <div class="mb-2">
+                                    <textarea name="text" class="form-control custom-form-control" rows="2" placeholder="Напишите ответ..." required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-sm btn-reply-outline">Ответить</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="text-center py-5 border rounded-4 bg-light mb-4" id="no-reviews-text">
+                {% bs_icon 'chat-square-heart' size='2.5rem' extra_classes='text-muted' %}
+                <p class="text-muted mt-2 mb-0">Отзывов пока нет. Станьте первым!</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Форма нового отзыва -->
+    <div class="card p-4 border-0 shadow-sm mt-5" style="background: #f8fafc; border-radius: 16px;">
+        <h4 class="fw-bold mb-4 text-dark">Оставить свой отзыв</h4>
+        {% if user.is_authenticated %}
+            <form method="post" id="ajax-review-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="submit_review">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-secondary">Ваша оценка</label>
+                        <select name="rating" class="form-select custom-select w-100" required>
+                            <option value="5">★★★★★ (5)</option>
+                            <option value="4">★★★★☆ (4)</option>
+                            <option value="3">★★★☆☆ (3)</option>
+                            <option value="2">★★☆☆☆ (2)</option>
+                            <option value="1">★☆☆☆☆ (1)</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-bold text-secondary">Ваш отзыв</label>
+                        <textarea name="text" class="form-control custom-form-control" rows="4" placeholder="Поделитесь впечатлениями о товаре..." required></textarea>
+                    </div>
+                    <div class="col-12 mt-3">
+                        <button type="submit" class="btn btn-submit-primary">Отправить отзыв</button>
+                    </div>
+                </div>
+            </form>
+        {% else %}
+            <div class="alert alert-info border-0 rounded-3 mb-0" style="background: #e0f2fe; color: #0369a1;">
+                {% bs_icon 'info-circle-fill' extra_classes='me-2' %} Чтобы оставить отзыв, пожалуйста, <a href="{% url 'users:login'%}" class="fw-bold text-decoration-none" style="color: #0369a1;">авторизуйтесь</a>.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- HTML-шаблон для динамического добавления нового Отзыва через JS -->
+<template id="review-template">
+    <div class="card mb-4 shadow-sm review-card animate-fade-in">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-placeholder review-avatar me-3"></div>
+                    <div>
+                        <h6 class="mb-0 fw-bold text-dark review-username"></h6>
+                        <small class="text-muted">
+                            <i class="bi bi-clock me-1"></i><span class="review-date"></span>
+                        </small>
+                    </div>
+                </div>
+                <span class="badge badge-rating">
+                    <i class="bi bi-star-fill me-1"></i><span class="review-rating-text"></span>
+                </span>
+            </div>
+            <p class="card-text text-secondary mb-4 review-text" style="line-height: 1.6;"></p>
+
+            <div class="ms-0 ms-md-4 comments-wrapper p-3 mt-3">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-chat-left-text text-muted me-2"></i>
+                    <span class="fw-semibold text-secondary small">Комментарии и ответы</span>
+                </div>
+                <div class="comments-list"></div>
+                <form method="post" class="mt-3 ajax-comment-form">
+                    <input type="hidden" name="csrfmiddlewaretoken" value="">
+                    <input type="hidden" name="review_id" value="">
+                    <input type="hidden" name="action" value="submit_comment">
+                    <div class="mb-2">
+                        <textarea name="text" class="form-control custom-form-control" rows="2" placeholder="Напишите ответ..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-reply-outline">Ответить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- HTML-шаблон для динамического добавления нового Комментария через JS -->
+<template id="comment-template">
+    <div class="mb-2 pb-2 comment-item animate-fade-in">
+        <div class="d-flex justify-content-between mb-1">
+            <span class="small text-dark fw-bold comment-username"></span>
+            <span class="text-muted small comment-date"></span>
+        </div>
+        <p class="mb-0 small text-secondary comment-text"></p>
+    </div>
+</template>
+
+<!-- Подключение логики AJAX-отправки -->
+<script src="{% static 'shop/js/includes/reviews.js' %}"></script>
