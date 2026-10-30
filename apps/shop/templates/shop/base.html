@@ -128,6 +128,15 @@
 <button id="scrollToTopBtn" type="button" class="scroll-to-top disabled">
     {% bs_icon 'arrow-up' size="25px" %}
 </button>
-
+{% if messages %}
+    <div class="position-fixed bottom-0 end-0 p-3">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show m-0" role="alert">
+          {{ message }}
+          <button class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
 </body>
 </html>

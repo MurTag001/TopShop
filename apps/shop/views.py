@@ -1,4 +1,5 @@
 import json
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import F, Q, Count, Exists, OuterRef, Prefetch
 from django.http import HttpResponseRedirect, JsonResponse
@@ -362,6 +363,7 @@ class ProductAddView(LoginRequiredMixin, CreateView):
 
         form.save_m2m()
         self.object = product
+        messages.success(self.request, 'Товар успешно добавлен!')
         return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
