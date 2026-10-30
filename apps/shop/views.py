@@ -1,5 +1,6 @@
+import json
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.db.models import F, Q, Exists, OuterRef
+from django.db.models import F, Q, Count, Exists, OuterRef, Prefetch
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse, reverse_lazy
@@ -11,9 +12,8 @@ from django.views.generic import (
     TemplateView,
     UpdateView,
 )
-
 from .forms import ProductForm, ReviewForm, CommentForm
-from .models import Category, Manufacturer, Product, Tag, Review
+from .models import Category, Comment, Manufacturer, Product, Tag, Review, ReviewReaction
 
 
 class HomePageView(TemplateView):
@@ -51,49 +51,125 @@ class ShopDetailView(DetailView):
             )
         return Product.objects.filter(is_active=True)
 
-    def get_object(self, queryset=None):
-        product = super().get_object(queryset)
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
         user = self.request.user
 
-        session_key = f'product_{product.id}_viewed'
-        if not self.request.session.get(session_key, False) and product.owner != user:
-            Product.objects.filter(id=product.id).update(views=F("views") + 1)
-            product.views += 1
+        session_key = f'product_{self.object.id}_viewed'
+        is_owner = user.is_authenticated and self.object.owner == user
+
+        if not self.request.session.get(session_key, False) and not is_owner:
+            Product.objects.filter(id=self.object.id).update(views=F("views") + 1)
+            self.object.views += 1
             self.request.session[session_key] = True
 
-        if user.is_authenticated and user != product.owner:
-            product.viewed_by_users.add(user)
+        if user.is_authenticated and not is_owner:
+            self.object.viewed_by_users.add(user)
 
-        return product
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        user = self.request.user
+
+        active_comments = Comment.objects.filter(is_active=True).select_related('user')
         
-        context['reviews'] = (
+        has_reviewed = False
+        if user.is_authenticated:
+            has_reviewed = self.object.reviews.filter(user=user).exists()
+        
+        reviews_queryset = (
             self.object.reviews.filter(is_active=True)
             .select_related('user')
-            .prefetch_related('comments__user')
+            .prefetch_related(Prefetch('comments', queryset=active_comments))
         )
+
+        reviews_queryset = reviews_queryset.annotate(
+            likes_count=Count('reactions', filter=Q(reactions__is_like=True)),
+            dislikes_count=Count('reactions', filter=Q(reactions__is_like=False)),
+        ).annotate(
+            helpfulness_score=F('likes_count') - F('dislikes_count')
+        )
+
+        if user.is_authenticated:
+            reviews_queryset = reviews_queryset.annotate(
+                user_liked=Exists(
+                    ReviewReaction.objects.filter(review=OuterRef('pk'), user=user, is_like=True)
+                ),
+                user_disliked=Exists(
+                    ReviewReaction.objects.filter(review=OuterRef('pk'), user=user, is_like=False)
+                )
+            )
         
-        context['review_form'] = ReviewForm()
-        context['comment_form'] = CommentForm()
+        context['reviews'] = reviews_queryset.order_by('-helpfulness_score', '-created_at')
+        context['has_reviewed'] = has_reviewed
+        context['review_form'] = kwargs.get('review_form') or ReviewForm()
+        context['comment_form'] = kwargs.get('comment_form') or CommentForm()
         return context
 
     def post(self, request, *args, **kwargs):
-        # Получаем текущий объект товара, чтобы привязать к нему отзыв и выполнить редирект
-        self.object = self.get_object()
-
-        # Проверяем, является ли запрос AJAX-запросом
+        self.object = super().get_object()
         is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
 
-        # Защита: неавторизованные пользователи не могут отправлять формы
         if not request.user.is_authenticated:
             if is_ajax:
                 return JsonResponse({'error': 'Вы должны быть авторизованы'}, status=403)
             return redirect('users:login')
+
+        # Обработка реакций (Лайк/Дизлайк)
+        if is_ajax and request.content_type == 'application/json':
+            try:
+                data = json.loads(request.body)
+            except json.JSONDecodeError:
+                data = {}
+                
+            review_id = data.get('review_id')
+            is_like = data.get('is_like')
+            
+            if is_like is None or review_id is None:
+                return JsonResponse({'status': 'error', 'error': 'Некорректные данные'}, status=400)
+            
+            review = get_object_or_404(Review, id=review_id, product=self.object)
+            
+            reaction, created = ReviewReaction.objects.get_or_create(
+                review=review,
+                user=request.user,
+                defaults={'is_like': is_like}
+            )
+
+            if not created:
+                if reaction.is_like == is_like:
+                    reaction.delete()
+                    status = 'deleted'
+                else:
+                    reaction.is_like = is_like
+                    reaction.save()
+                    status = 'updated'
+            else:
+                status = 'created'
+
+            counts = review.reactions.aggregate(
+                likes=Count('id', filter=Q(is_like=True)),
+                dislikes=Count('id', filter=Q(is_like=False))
+            )
+
+            return JsonResponse({
+                'status': status,
+                'likes_count': counts['likes'],
+                'dislikes_count': counts['dislikes']
+            })
         
-        # Сценарий А: Пользователь отправляет отзыв
+        # Сценарий А: Отправка отзыва
         if 'submit_review' in request.POST or (is_ajax and request.POST.get('action') == 'submit_review'):
+            if Review.objects.filter(product=self.object, user=request.user).exists():
+                if is_ajax:
+                    return JsonResponse({
+                        'status': 'error', 
+                        'errors': {'__all__': ['Вы уже оставили отзыв к этому товару.']}
+                    }, status=400)
+                return redirect(self.object.get_absolute_url())
+
             review_form = ReviewForm(request.POST)
             if review_form.is_valid():
                 review = review_form.save(commit=False)
@@ -107,7 +183,7 @@ class ShopDetailView(DetailView):
                         'username': review.user.username,
                         'rating': review.get_rating_display(),
                         'text': review.text,
-                        'created_at': review.created_at.isoformat(),  # Передаем точную ISO-строку времени в UTC
+                        'created_at': review.created_at.isoformat(),
                         'review_id': review.id
                     })
                 return redirect(self.object.get_absolute_url())
@@ -115,11 +191,10 @@ class ShopDetailView(DetailView):
             if is_ajax:
                 return JsonResponse({'status': 'error', 'errors': review_form.errors}, status=400)
 
-        # Сценарий Б: Пользователь отвечает комментарием на отзыв
+        # Сценарий Б: Отправка комментария
         elif 'submit_comment' in request.POST or (is_ajax and request.POST.get('action') == 'submit_comment'):
             comment_form = CommentForm(request.POST)
             review_id = request.POST.get('review_id')
-            # Безопасно получаем отзыв, проверяя, что он привязан к текущему товару
             review = get_object_or_404(Review, id=review_id, product=self.object)
             
             if comment_form.is_valid():
@@ -133,7 +208,7 @@ class ShopDetailView(DetailView):
                         'status': 'success',
                         'username': comment.user.username,
                         'text': comment.text,
-                        'created_at': comment.created_at.isoformat(),  # Передаем точную ISO-строку времени в UTC
+                        'created_at': comment.created_at.isoformat(),
                         'review_id': review_id
                     })
                 return redirect(self.object.get_absolute_url())
@@ -141,15 +216,13 @@ class ShopDetailView(DetailView):
             if is_ajax:
                 return JsonResponse({'status': 'error', 'errors': comment_form.errors}, status=400)
 
-        # Стандартный fallback-сценарий (для обычных HTML-форм без AJAX при ошибках валидации)
-        context = self.get_context_data(object=self.object)
+        kwargs = {}
         if 'submit_review' in request.POST:
-            context['review_form'] = review_form
+            kwargs['review_form'] = review_form
         elif 'submit_comment' in request.POST:
-            context['comment_form'] = comment_form
-            
-        return self.render_to_response(context)
+            kwargs['comment_form'] = comment_form
 
+        return self.render_to_response(self.get_context_data(**kwargs))
 
 
 class CategoryProductsView(ListView):
@@ -168,7 +241,7 @@ class CategoryProductsView(ListView):
         context["category"] = self.category
         return context
 
-
+    
 class TagProductsView(ListView):
     context_object_name = "products"
     template_name = "shop/pages/tag_products.html"
