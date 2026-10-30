@@ -2,15 +2,13 @@ from django import forms
 from .models import Product, Review, Comment
 
 class ProductForm(forms.ModelForm):
-      
     tags_input = forms.CharField(
-    required=False,
-    widget=forms.TextInput(attrs={
-      'class': 'form-control',
-      'placeholder': 'Введите теги через запятую'
-    }),
-    label="Теги",
-    help_text="- можно указать несколько тегов",
+        required=False,
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Введите теги через запятую'
+        }),
+        label="Теги",
+        help_text="- можно указать несколько тегов",
     )
 
     manufacturer_input = forms.CharField(
@@ -59,33 +57,33 @@ class ProductForm(forms.ModelForm):
                 'id': 'activeInput',
                 'class': 'form-check-input'
             }),
-            'category': forms.Select(attrs={
-                'class': 'form-control'}),
-            'tags': forms.SelectMultiple(attrs={
-                'class': 'form-control'}),
-            'image': forms.FileInput(attrs={
-                'class': 'form-control'})
+            'category': forms.Select(),
+            'image': forms.FileInput()
         }
         
         labels = {
             'name': 'Наименование:',
             'category': 'Категория:',
-            'tags': 'Теги:',
             'description': 'Описание:',
             'price': 'Цена:',
             'stock': 'Количество на складе:',
             'is_active': 'Доступен для продажи',
             'image': 'Картинка товара'
         }
+        
         help_texts = {
-      'category': "- можно выбрать только одну категорию",
-      'tags': '- можно выбрать несколько тегов',
-    }
+            'category': "- можно выбрать только одну категорию",
+        }
         
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['category'].empty_label = "- Категория -"
+        
+        for field_name, field in self.fields.items():
+            if not isinstance(field.widget, forms.CheckboxInput):
+                existing_classes = field.widget.attrs.get('class', '')
+                field.widget.attrs['class'] = f"{existing_classes} form-control".strip()
 
 
     def clean_name(self):
@@ -96,12 +94,14 @@ class ProductForm(forms.ModelForm):
 
 
     def clean_tags_input(self):
-        tag_names = [
+        tags_data = self.cleaned_data.get('tags_input', '')
+        if not tags_data:
+            return []
+        return [
             tag_name.strip().lower()
-            for tag_name in self.cleaned_data.get('tags_input').split(',')
+            for tag_name in tags_data.split(',')
             if tag_name.strip()
         ]
-        return tag_names
 
 
 class ReviewForm(forms.ModelForm):

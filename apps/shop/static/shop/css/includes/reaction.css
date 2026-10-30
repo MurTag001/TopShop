@@ -1,0 +1,8 @@
+.btn-like.active {
+    background-color: #198754 !important;
+    color: #fff !important;
+}
+.btn-dislike.active {
+    background-color: #dc3545 !important;
+    color: #fff !important;
+}

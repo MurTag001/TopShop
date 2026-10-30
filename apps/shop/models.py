@@ -159,7 +159,7 @@ class Review(models.Model):
     ]
 
     product = models.ForeignKey(
-        Product,
+        'Product',
         on_delete=models.CASCADE,
         related_name='reviews',
         verbose_name="Товар"
@@ -182,9 +182,39 @@ class Review(models.Model):
         verbose_name = "Отзыв"
         verbose_name_plural = "Отзывы"
         ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(fields=['product', 'user'], name='unique_product_user_review')
+        ]
 
     def __str__(self):
-        return f"Отзыв от {self.user.username} на {self.product.name} ({self.rating}/5)"
+        return f"Отзыв #{self.id} от пользователя {self.user_id} на товар {self.product_id} ({self.rating}/5)"
+
+
+class ReviewReaction(models.Model):
+    review = models.ForeignKey(
+        Review, 
+        on_delete=models.CASCADE, 
+        related_name='reactions', 
+        verbose_name="Отзыв"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='review_reactions',
+        verbose_name="Пользователь"
+    )
+    is_like = models.BooleanField(verbose_name="Лайк (True) / Дизлайк (False)")
+
+    class Meta:
+        verbose_name = "Реакция на отзыв"
+        verbose_name_plural = "Реакции на отзывы"
+        constraints = [
+            models.UniqueConstraint(fields=['review', 'user'], name='unique_review_user_reaction')
+        ]
+
+    def __str__(self):
+        reaction_type = "Лайк" if self.is_like else "Дизлайк"
+        return f"{reaction_type} от пользователя {self.user_id} к отзыву #{self.review_id}"
 
 
 class Comment(models.Model):
@@ -210,4 +240,4 @@ class Comment(models.Model):
         ordering = ['created_at']
 
     def __str__(self):
-        return f"Комментарий от {self.user.username} к отзыву #{self.review.id}"
+        return f"Комментарий #{self.id} от пользователя {self.user_id} к отзыву #{self.review_id}"
