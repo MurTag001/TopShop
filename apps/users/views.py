@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.views import LoginView as AuthLoginView, LogoutView as AuthLogoutView
@@ -19,13 +20,16 @@ class LoginView(AuthLoginView):
     template_name = 'users/pages/login.html'
     authentication_form = CustomAuthenticationForm
 
-
     def get_success_url(self):
         next_url = self.request.GET.get('next')
         if not next_url:
             return reverse_lazy('users:profile', kwargs={'username': self.request.user.username})
 
         return next_url
+
+    def form_invalid(self, form):
+      messages.warning(self.request, 'Ошибка входа!')
+      return super().form_invalid(form)
   
 
 class LogoutView(AuthLogoutView):
