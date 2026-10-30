@@ -1,9 +1,10 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.views import LoginView as AuthLoginView, LogoutView as AuthLogoutView
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DetailView
 from django.views.generic.list import MultipleObjectMixin
+from users.forms import CustomAuthenticationForm
 
 User = get_user_model()
 
@@ -16,7 +17,7 @@ class RegisterView(CreateView):
 
 class LoginView(AuthLoginView):
     template_name = 'users/pages/login.html'
-    authentication_form = AuthenticationForm
+    authentication_form = CustomAuthenticationForm
 
 
     def get_success_url(self):
