@@ -151,3 +151,7 @@ MAILERS = {
 LOGIN_URL = 'users:login'
 DEFAULT_LOGIN_REDIRECT_URL = 'shop:home_page'
 SHELL_PLUS = "ipython"
+
+AUTHENTICATION_BACKENDS = [
+    'users.auth_backend.EmailOrUsernameBackend'
+]
