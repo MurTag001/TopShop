@@ -4,17 +4,22 @@
 <link rel="stylesheet" href="{% static 'shop/css/includes/reaction.css' %}">
 
 <div class="reaction-buttons d-flex align-items-center gap-2 mt-2" data-review-id="{{ review.id }}">
-    <!-- Кнопка лайка -->
-    <button type="button" class="btn btn-sm {% if review.user_liked %}btn-success{% else %}btn-outline-success{% endif %} btn-like py-0 px-2 small">
+    
+<!-- Кнопка лайка -->
+    <button type="button" class="btn btn-sm 
+    {% if review.user_liked %}btn-success
+    {% else %}btn-outline-success
+    {% endif %} btn-like py-0 px-2 small">
         {% bs_icon 'hand-thumbs-up' extra_classes='me-1' %}
         <span class="likes-count-text">{{ review.likes_count }}</span>
     </button>
 
-    <!-- Кнопка дизлайка -->
-    <button type="button" class="btn btn-sm {% if review.user_disliked %}btn-danger{% else %}btn-outline-danger{% endif %} btn-dislike py-0 px-2 small">
+<!-- Кнопка дизлайка -->
+    <button type="button" class="btn btn-sm 
+    {% if review.user_disliked %}btn-danger
+    {% else %}btn-outline-danger
+    {% endif %} btn-dislike py-0 px-2 small">
         {% bs_icon 'hand-thumbs-down' extra_classes='me-1' %}
         <span class="dislikes-count-text">{{ review.dislikes_count }}</span>
     </button>
 </div>
-
-<script src="{% static 'shop/js/includes/reaction.js' %}"></script>

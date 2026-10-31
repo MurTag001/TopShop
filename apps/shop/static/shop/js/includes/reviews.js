@@ -14,7 +14,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }).replace(',', '');
     };
 
-    // Вспомогательная функция для получения CSRF токена из куки (нужна для JSON fetch-запросов)
     const getCookie = (name) => {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -53,7 +52,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => {
                 return response.json().then(data => {
                     if (!response.ok) {
-                        // Если статус ответа не 2xx (например, 400), принудительно уводим код в блок .catch
                         return Promise.reject({ status: response.status, data: data });
                     }
                     return data;
@@ -98,7 +96,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     reviewForm.reset();
 
-                    // Блокируем повторную отправку отзыва (сработает ТОЛЬКО при реальном успехе)
                     const formContainer = reviewForm.parentElement;
                     if (formContainer) {
                         formContainer.innerHTML = `
@@ -112,8 +109,6 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Ошибка AJAX (Отзыв):', error);
-                
-                // ОБРАБОТКА ОШИБОК 400: Выводим ошибки валидации или предупреждение о дубликате
                 if (error.data && error.data.errors) {
                     let errorMessages = [];
                     for (let field in error.data.errors) {
@@ -121,7 +116,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     alert(errorMessages.join('\n'));
                     
-                    // Если бэкенд сообщил, что отзыв уже есть, то превентивно схлопываем форму на клиенте
                     if (JSON.stringify(error.data.errors).includes('уже оставили отзыв')) {
                         const formContainer = reviewForm.parentElement;
                         if (formContainer) {
@@ -142,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (reviewsContainer) {
         reviewsContainer.addEventListener('submit', function(e) {
             const targetForm = e.target.closest('.ajax-comment-form');
-            if (!targetForm) return;
+            if (!targetForm) return; 
             
             e.preventDefault();
             const reviewId = targetForm.getAttribute('data-review-id');
@@ -157,61 +151,39 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (data.status === 'success') {
                     const commentsList = document.getElementById(`comments-list-${reviewId}`);
+                    if (!commentsList) return;
+                    
                     const noCommentsText = commentsList.querySelector('.no-comments-text');
                     if (noCommentsText) noCommentsText.remove();
                     
                     const template = document.getElementById('comment-template');
+                    if (!template) return;
+                    
                     const clone = template.content.cloneNode(true);
-                    
-                    clone.querySelector('.comment-username').textContent = data.username;
-                    clone.querySelector('.comment-date').textContent = formatLocalDate(data.created_at);
-                    clone.querySelector('.comment-text').textContent = data.text;
-                    
-                    commentsList.appendChild(clone);
-                    targetForm.reset();
                 }
             })
             .catch(error => console.error('Ошибка AJAX (Комментарий):', error));
         });
+    }
 
-        // --- 3. ОБРАБОТКА ЛАЙКОВ/ДИЗЛАЙКОВ (Новый JSON Делегированный обработчик) ---
+    // --- 3. ДЕЛЕГИРОВАНИЕ КЛИКОВ ДЛЯ РЕАКЦИЙ (ЛАЙКИ/ДИЗЛАЙКИ) ---
+    if (reviewsContainer) {
         reviewsContainer.addEventListener('click', function(e) {
-            const btn = e.target.closest('.btn-like, .btn-dislike');
-            if (!btn) return;
+            const btnLike = e.target.closest('.btn-like');
+            const btnDislike = e.target.closest('.btn-dislike');
+            
+            if (!btnLike && !btnDislike) return;
 
-            const reactionBlock = btn.closest('.reaction-buttons');
+            const clickedBtn = btnLike || btnDislike;
+            const reactionBlock = clickedBtn.closest('.reaction-buttons');
+            if (!reactionBlock) return;
+
             const reviewId = reactionBlock.getAttribute('data-review-id');
-            const isLike = btn.classList.contains('btn-like');
+            const isLike = !!btnLike;
 
-            // Отправляем чистый JSON запрос, как требует вьюха Django
-            fetch(window.location.href, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({
-                    action: 'toggle_reaction',
-                    review_id: reviewId,
-                    is_like: isLike
-                })
-            })
-            .then(response => {
-                if (!response.ok) throw new Error('Ошибка авторизации или неверные данные');
-                return response.json();
-            })
-            .then(data => {
-                // Динамически обновляем счетчики на кнопках конкретного отзыва
-                const likesText = reactionBlock.querySelector('.likes-count-text') || reactionBlock.querySelector('.btn-like');
-                const dislikesText = reactionBlock.querySelector('.dislikes-count-text') || reactionBlock.querySelector('.btn-dislike');
-                
-                if (likesText) likesText.textContent = data.likes_count;
-                if (dislikesText) dislikesText.textContent = data.dislikes_count;
-
-                // Опционально: здесь можно добавлять активные классы стилей для подсвечивания нажатой кнопки (data.status)
-            })
-            .catch(error => console.error('Ошибка обработки реакции:', error));
+            if (typeof window.sendReaction === 'function') {
+                window.sendReaction(e, reviewId, isLike, clickedBtn);
+            }
         });
     }
 });
