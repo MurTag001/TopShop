@@ -12,107 +12,123 @@
         </a>
     </div>
 
-    <!-- Основная карточка товара -->
-    <div class="card border-0 shadow-sm rounded-4 p-4 mb-5" style="background: #ffffff;">
-        <div class="row g-4">
-            <!-- Блок изображения -->
-            <div class="col-md-4 text-center">
-                {% if product.image %}
-                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-fluid rounded-4 shadow-sm" style="max-height: 300px; object-fit: cover;">
-                {% else %}
-                    <div class="d-flex flex-column align-items-center justify-content-center bg-light rounded-4 w-100" style="height: 250px; color: #a0aec0;">
-                        {% bs_icon 'image' size='2.5rem' extra_classes='mb-2' %}
-                        <span>Нет изображения</span>
-                    </div>
-                {% endif %}
-            </div>
-
-            <!-- Блок информации -->
-            <div class="col-md-8">
-                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
-                    <div>
-                        <span class="badge bg-light text-secondary mb-1">ID: {{ product.id }}</span>
-                        <h1 class="fw-bold text-dark h3 mb-2">{{ product.name }}</h1>
-                    </div>
-                    <div class="text-end">
-                        <span class="h4 fw-bold text-primary d-block mb-1">{{ product.price|floatformat:2 }} руб.</span>
-                        {% if product.stock > 0 %}
-                            <span class="badge bg-success-subtle text-success">В наличии ({{ product.stock }} шт.)</span>
-                        {% else %}
-                            <span class="badge bg-danger-subtle text-danger">Нет в наличии</span>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <hr class="text-black-50 my-3">
-
-                <!-- Метаданные -->
-                <div class="row g-2 small text-secondary mb-3">
-                    <div class="col-sm-6">
-                        <strong>Категория:</strong> <a href="{{ product.category.get_absolute_url }}" class="text-decoration-none text-dark fw-medium">{{ product.category }}</a>
-                    </div>
-                    {% if product.manufacturer %}
-                    <div class="col-sm-6">
-                        <strong>Производитель:</strong> <a href="{{ product.manufacturer.get_absolute_url }}" class="text-decoration-none text-dark fw-medium">{{ product.manufacturer.name }}</a> <span class="text-muted">({{ product.manufacturer.country }})</span>
-                    </div>
-                    {% endif %}
-                </div>
-
-                <!-- Теги -->
-                <div class="mb-3">
-                    <span class="small text-secondary d-block mb-1">Теги:</span>
-                    {% for tag in product.tags.all %}
-                        <a href="{{ tag.get_absolute_url }}" class="badge bg-light text-secondary text-decoration-none border me-1">#{{ tag.name }}</a>
-                    {% empty %}
-                        <span class="text-muted small">нет тегов</span>
-                    {% endfor %}
-                </div>
-
-                <!-- Характеристики -->
-                <div class="mb-4">
-                    <h6 class="fw-bold text-dark mb-2">Описание товара</h6>
-                    <p class="text-secondary" style="line-height: 1.6;">{{ product.description }}</p>
-                </div>
-
-                <!-- Продавец и Статистика -->
-                <div class="d-flex justify-content-between align-items-center bg-light rounded-3 p-3 mt-auto">
-                    <div class="small">
-                        <span class="text-secondary">Продавец:</span>
-                        <a href="{% url 'users:profile' username=product.owner.username %}" class="fw-bold text-dark text-decoration-none ms-1">
-                            {{ product.owner.username }}
-                        </a>
-                    </div>
-                    <div class="text-muted small d-flex align-items-center gap-3">
-                        <span>{% bs_icon 'eye' extra_classes='me-1' %}{{ product.views }}</span>
-                        {% if request.user == product.owner %}
-                            {% if product.is_active %}
-                                <span class="text-success fw-medium">{% bs_icon 'check-circle' extra_classes='me-1' %}Активен</span>
-                            {% else %}
-                                <span class="text-warning fw-medium">{% bs_icon 'exclamation-circle' extra_classes='me-1' %}Черновик</span>
-                            {% endif %}
-                        {% endif %}
-                    </div>
-                </div>
-
-                <!-- Даты и управление владельца -->
-                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3 pt-2 border-top border-light">
-                    <div class="text-muted" style="font-size: 0.75rem;">
-                        <span>Добавлен: {{ product.created_at|date:"d.m.Y" }}</span>
-                        <span class="ms-3">Изменен: {{ product.updated_at|date:"d.m.Y" }}</span>
-                    </div>
-                    
-                    {% if request.user == product.owner %}
-                        <div class="d-flex gap-2">
-                            <a href="{% url 'shop:product_edit' product_slug=product.slug %}" class="btn btn-sm btn-outline-secondary rounded-3">Редактировать</a>
-                            <a href="{% url 'shop:product_remove' product_slug=product.slug %}" class="btn btn-sm btn-outline-danger rounded-3">Удалить</a>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
+  <!-- Основная карточка товара -->
+  <div class="card border-0 shadow-sm rounded-4 p-4 mb-5" style="background: #ffffff">
+    <div class="row g-4">
+      
+      <div class="col-md-4 d-flex justify-content-center justify-content-md-start">
+        <div class="product-image-wrapper" style="width: 100%; max-width: 300px; position: relative;">
+          {% if product.image %}
+            <img src="{{ product.image.url }}" class="img-fluid rounded-3" alt="{{ product.name }}" />
+          {% else %}
+            <div class="product-image-placeholder"><span>Нет фото</span></div>
+          {% endif %} 
+          {% include "shop/includes/favorites.html" %}
         </div>
-    </div>
+      </div>
 
-    <!-- Подключаемый блок отзывов -->
-    {% include "shop/includes/reviews.html" %}
+      <!-- Блок информации -->
+      <div class="col-md-8 d-flex flex-column">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+          <div>
+            <span class="badge bg-light text-secondary mb-1">ID: {{ product.id }}</span>
+            <h1 class="fw-bold text-dark h3 mb-2">{{ product.name }}</h1>
+          </div>
+          <div class="text-end">
+            <span class="h4 fw-bold text-primary d-block mb-1">{{ product.price|floatformat:2 }} руб.</span>
+            {% if product.stock > 0 %}
+              <span class="badge bg-success-subtle text-success">В наличии ({{ product.stock }} шт.)</span>
+            {% else %}
+              <span class="badge bg-danger-subtle text-danger">Нет в наличии</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <hr class="text-black-50 my-3" />
+
+        <!-- Метаданные -->
+        <div class="row g-2 small text-secondary mb-3">
+          <div class="col-sm-6">
+            <strong>Категория:</strong>
+            <a href="{{ product.category.get_absolute_url }}" class="text-decoration-none text-dark fw-medium">
+              {{ product.category }}
+            </a>
+          </div>
+          {% if product.manufacturer %}
+          <div class="col-sm-6">
+            <strong>Производитель:</strong>
+            <a href="{{ product.manufacturer.get_absolute_url }}" class="text-decoration-none text-dark fw-medium">
+              {{ product.manufacturer.name }}
+            </a>
+            <span class="text-muted">({{ product.manufacturer.country }})</span>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Теги  -->
+        <div class="mb-3">
+          <span class="small text-secondary d-block mb-1">Теги:</span>
+          {% for tag in product.tags.all %}
+            <a href="{% url 'shop:tag_products' tag_slug=tag.slug %}" class="badge bg-light text-secondary text-decoration-none border me-1">
+              #{{ tag.name }}
+            </a>
+          {% empty %}
+            <span class="text-muted small">нет тегов</span>
+          {% endfor %}
+        </div>
+
+        <!-- Характеристики -->
+        <div class="mb-4">
+          <h6 class="fw-bold text-dark mb-2">Описание товара</h6>
+          <p class="text-secondary" style="line-height: 1.6">
+            {{ product.description }}
+          </p>
+        </div>
+
+        <!-- Продавец и Статистика -->
+        <div class="d-flex justify-content-between align-items-center bg-light rounded-3 p-3 mt-auto">
+          <div class="small">
+            <span class="text-secondary">Продавец:</span>
+            <a href="{% url 'users:profile' username=product.owner.username %}" class="fw-bold text-dark text-decoration-none ms-1">
+              {{ product.owner.username }}
+            </a>
+          </div>
+          <div class="text-muted small d-flex align-items-center gap-3">
+            <span>{% bs_icon 'eye' extra_classes='me-1' %}{{ product.views }}</span>
+            {% if request.user == product.owner %} 
+              {% if product.is_active %}
+                <span class="text-success fw-medium">{% bs_icon 'check-circle' extra_classes='me-1' %}Активен</span>
+              {% else %}
+                <span class="text-warning fw-medium">{% bs_icon 'exclamation-circle' extra_classes='me-1' %}Черновик</span>
+              {% endif %} 
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Даты и управление владельца -->
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3 pt-2 border-top border-light">
+          <div class="text-muted" style="font-size: 0.75rem">
+            <span>Добавлен: {{ product.created_at|date:"d.m.Y" }}</span>
+            <span class="ms-3">Изменен: {{ product.updated_at|date:"d.m.Y" }}</span>
+          </div>
+
+          {% if request.user == product.owner %}
+          <div class="d-flex gap-2">
+            <a href="{% url 'shop:product_edit' product_slug=product.slug %}" class="btn btn-sm btn-outline-secondary rounded-3">
+              Редактировать
+            </a>
+            <a href="{% url 'shop:product_remove' product_slug=product.slug %}" class="btn btn-sm btn-outline-danger rounded-3">
+              Удалить
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      
+    </div>
+  </div>
+
+  <!-- Подключаемый блок отзывов -->
+  {% include "shop/includes/reviews.html" %}
 </div>
 {% endblock page_content %}

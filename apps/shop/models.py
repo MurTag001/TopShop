@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db import models
 from django.conf import settings
 from django.urls import reverse
@@ -55,6 +56,11 @@ class Product(models.Model):
         related_name='viewed_products',
         blank=True,
         verbose_name="Просмотрено пользователями"
+    )
+    favorites = models.ManyToManyField(
+        User, 
+        related_name='favorite_products', 
+        blank=True
     )
 
 

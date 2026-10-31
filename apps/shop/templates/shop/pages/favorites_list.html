@@ -1,0 +1,55 @@
+{% extends "shop/base.html" %}
+{% load static %}
+{% load bootstrap_icons %}
+
+{% block page_title %}{{ block.super }} | Избранные товары{% endblock page_title %}
+
+{% block styles %}
+  <link rel="stylesheet" href="{% static 'shop/css/pages/product_list.css' %}">
+  <link rel="stylesheet" href="{% static 'shop/css/includes/product_container.css' %}">
+{% endblock styles %}
+
+{% block page_content %}
+<div class="container py-4">
+    
+    <!-- Заголовок страницы -->
+    <div class="d-flex align-items-center mb-4">
+        <h1 class="h3 fw-bold text-dark m-0">
+            {% bs_icon 'heart-fill' extra_classes='text-danger me-2' %}Моё избранное
+        </h1>
+        <span class="badge bg-secondary rounded-pill ms-2" id="favorites-count">{{ products|length }}</span>
+    </div>
+
+    {% if products %}
+        <div class="products-grid">
+            {% for item in products %}
+                <div class="favorite-item-wrapper" data-product-id="{{ item.id }}" style="transition: all 0.4s ease;">
+                    {% include "shop/includes/product_container.html" with product=item %}
+                </div>
+            {% endfor %}
+        </div>
+        {# Пагинация #}
+        {% if is_paginated %}
+            <div class="mt-5">
+                {% include "shop/includes/pagination.html" %}
+            </div>
+        {% endif %}
+
+    {% else %}
+        <!-- Состояние, если избранных товаров пока нет -->
+        <div class="card border-0 shadow-sm rounded-4 p-5 text-center my-5 bg-white">
+            <div class="text-muted mb-3">
+                {% bs_icon 'heart' size='4rem' extra_classes='text-black-50' %}
+            </div>
+            <h3 class="fw-bold h5 text-dark">В избранном пока ничего нет</h3>
+            <p class="text-secondary small mb-4">Добавляйте понравившиеся товары в избранное, чтобы не потерять их.</p>
+            <div>
+                <a href="{% url 'shop:product_list' %}" class="btn btn-primary rounded-3 px-4">
+                    {% bs_icon 'shop' extra_classes='me-1' %}Перейти к товарам
+                </a>
+            </div>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock page_content %}

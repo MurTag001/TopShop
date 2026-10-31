@@ -5,6 +5,7 @@ from django.db.models import F, Q, Count, Exists, OuterRef, Prefetch
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse, reverse_lazy
+from django.views import View
 from django.views.generic import (
     CreateView,
     DeleteView,
@@ -481,3 +482,28 @@ class ProductRemoveView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def handle_no_permission(self):
         return render(self.request, "shop/pages/not_allowed.html")
+
+
+class ToggleFavoriteView(LoginRequiredMixin, View):
+    def post(self, request, product_id, *args, **kwargs):
+        product = get_object_or_404(Product, id=product_id)
+        user = request.user
+        
+        if product.favorites.filter(id=user.id).exists():
+            product.favorites.remove(user)
+            is_favorite = False
+        else:
+            product.favorites.add(user)
+            is_favorite = True
+            
+        return JsonResponse({'status': 'ok', 'is_favorite': is_favorite})
+
+    
+class FavoriteListView(LoginRequiredMixin, ListView):
+    model = Product
+    template_name = 'shop/pages/favorites_list.html'
+    context_object_name = 'products'
+    paginate_by = 12
+
+    def get_queryset(self):
+        return self.request.user.favorite_products.all().order_by('-id')

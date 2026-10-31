@@ -1,10 +1,13 @@
-const alerts = document.querySelectorAll('.auto-dismiss')
-alerts.forEach(alert => {
-  // Создаем экземпляр alert Bootstrap
-  const bsAlert = new bootstrap.Alert(alert)
-
-  // Автоматическое закрытие через 4 секунды
-  setTimeout(() => {
-    bsAlert.close()
-  }, 4000)
-})
+document.addEventListener('DOMContentLoaded', () => {
+    const djangoMessages = document.querySelectorAll('.toast.auto-dismiss');
+    
+    djangoMessages.forEach(messageElement => {
+        if (typeof bootstrap !== 'undefined') {
+            const toast = new bootstrap.Toast(messageElement, { 
+                delay: 4000,
+                autohide: true 
+            });
+            toast.show();
+        }
+    });
+});

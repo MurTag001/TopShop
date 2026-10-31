@@ -14,6 +14,7 @@
   {% block styles %}{% endblock styles %}
   {% bootstrap_javascript %}
   <script src="{% static 'js/base.js' %}" type="module" defer></script>
+  <script src="{% static 'shop/js/includes/favorites.js' %}" defer></script>
 </head>
 
 <body class="d-flex flex-column min-vh-100">
@@ -68,6 +69,21 @@
               {% bs_icon 'bag-plus' extra_classes='me-1' %}
               Добавить позицию</a>
             </li>
+
+            <li class="nav-item">
+                <a
+                  class="nav-link {% if request.resolver_match.url_name == 'favorite_list' %}active{% endif %}"
+                  href="{% url 'shop:favorite_list' %}"
+                  >
+                  {% if request.resolver_match.url_name == 'favorite_list' %}
+                     {% bs_icon 'heart-fill' extra_classes='me-1 text-white' %}
+                   {% else %}
+                     {% bs_icon 'heart' extra_classes='me-1' %}
+                  {% endif %}
+                  Избранное
+                </a>
+            </li>
+
           </ul>
           <ul class="navbar-nav">
             {% if request.user.is_authenticated %}
@@ -128,15 +144,33 @@
 <button id="scrollToTopBtn" type="button" class="scroll-to-top disabled">
     {% bs_icon 'arrow-up' size="25px" %}
 </button>
-{% if messages %}
-    <div class="position-fixed bottom-0 end-0 p-3">
-      {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show m-0 auto-dismiss" role="alert">
-          {{ message }}
-          <button class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1055;">
+  {% if messages %}
+    {% for message in messages %}
+      <div class="toast show align-items-center text-white border-0 rounded-3 shadow auto-dismiss {% if message.tags %}bg-{{ message.tags }}{% else %}bg-dark{% endif %}" 
+           role="alert" 
+           aria-live="assertive" 
+           aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body d-flex align-items-center gap-2">
+            {{ message }}
+          </div>
+          <button type="button" class="btn-close btn-close-white m-auto me-2" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
-      {% endfor %}
-    </div>
+      </div>
+    {% endfor %}
   {% endif %}
+
+  <div id="favoriteToast" class="toast align-items-center text-white bg-dark border-0 rounded-3 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body d-flex align-items-center gap-2">
+        <span id="toastMessage">Товар добавлен в избранное</span>
+      </div>
+      <button type="button" class="btn-close btn-close-white m-auto me-2" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
