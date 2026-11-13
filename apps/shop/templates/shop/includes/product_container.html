@@ -63,7 +63,7 @@
 
     {% if request.user != product.owner %}
       {% if product.is_active and product.stock > 0 %}
-        <form action="{% url 'cart:cart_add' product.id %}" method="post" class="w-100">
+        <form action="{% url 'cart:cart_add' product.id %}" method="post" class="w-100 add-to-cart-form">
           {% csrf_token %}
           <button type="submit" class="btn btn-primary btn-sm w-100 d-flex align-items-center justify-content-center gap-1">
             <svg xmlns="http://w3.org" width="16" height="16" fill="currentColor" class="bi bi-cart-plus" viewBox="0 0 16 16">
