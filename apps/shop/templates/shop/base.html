@@ -83,6 +83,23 @@
                 </a>
             </li>
 
+            <li class="nav-item">
+              <a
+                class="nav-link {% if request.resolver_match.url_name == 'cart_detail' %}active{% endif %}"
+                href="{% url 'cart:cart_detail' %}"
+              >
+                {% if request.resolver_match.url_name == 'cart_detail' %}
+                  {% bs_icon 'cart-fill' extra_classes='me-1 text-white' %}
+                {% else %}
+                  {% bs_icon 'cart' extra_classes='me-1' %}
+                {% endif %}
+                Корзина
+                {% if user.is_authenticated and user.cart.total_quantity %}
+                  <span class="badge bg-primary ms-1">{{ user.cart.total_quantity }}</span>
+                {% endif %}
+              </a>
+            </li>
+
           </ul>
           <ul class="navbar-nav">
             {% if request.user.is_authenticated %}

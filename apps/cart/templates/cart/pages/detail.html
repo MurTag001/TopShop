@@ -1,0 +1,77 @@
+{% extends "shop/base.html" %}
+{% load bootstrap_icons %}
+
+{% block page_title %}Корзина — TopShop{% endblock page_title %}
+
+{% block page_content %}
+<div class="container my-5">
+    <h2 class="mb-4">{% bs_icon 'cart3' extra_classes='me-2' %}Ваша корзина</h2>
+
+    {% if cart.items.all %}
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Товар</th>
+                        <th>Цена</th>
+                        <th style="width: 180px;">Количество</th>
+                        <th>Сумма</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in cart.items.all %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if item.product.image %}
+                                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                                    {% endif %}
+                                    <div>
+                                        <h6 class="mb-0">{{ item.product.name }}</h6>
+                                        <small class="text-muted">В наличии: {{ item.product.stock }} шт.</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ item.product.price }} ₽</td>
+                            <td>
+                                <form action="{% url 'cart:cart_update' item.id %}" method="post" class="d-flex gap-2">
+                                    {% csrf_token %}
+                                    <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.product.stock }}" class="form-control form-control-sm">
+                                    <button type="submit" class="btn btn-sm btn-outline-primary" title="Обновить">
+                                        {% bs_icon 'check-lg' %}
+                                    </button>
+                                </form>
+                            </td>
+                            <td class="fw-bold">{{ item.total_price }} ₽</td>
+                            <td>
+                                <form action="{% url 'cart:cart_remove' item.id %}" method="post">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Удалить">
+                                        {% bs_icon 'trash' %}
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-4 p-3 bg-light rounded border">
+            <a href="{% url 'shop:product_list' %}" class="btn btn-outline-secondary">
+                {% bs_icon 'arrow-left' extra_classes='me-1' %}Продолжить покупки
+            </a>
+            <div class="text-end">
+                <p class="mb-1 text-muted">Всего товаров: <strong>{{ cart.total_quantity }} шт.</strong></p>
+                <h4 class="mb-0">Итого: {{ cart.total_price }} ₽</h4>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info d-flex align-items-center justify-content-between">
+            <span>Ваша корзина пока пуста.</span>
+            <a href="{% url 'shop:product_list' %}" class="btn btn-primary btn-sm">Перейти в каталог</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock page_content %}
