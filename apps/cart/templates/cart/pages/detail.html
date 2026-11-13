@@ -1,13 +1,13 @@
 {% extends "shop/base.html" %}
 {% load bootstrap_icons %}
 
-{% block page_title %}Корзина — TopShop{% endblock page_title %}
+{% block page_title %}{{ block.super }} | Корзина{% endblock page_title %}
 
 {% block page_content %}
 <div class="container my-5">
     <h2 class="mb-4">{% bs_icon 'cart3' extra_classes='me-2' %}Ваша корзина</h2>
 
-    {% if cart.items.all %}
+    <div id="cart-content-wrapper" class="{% if not cart.items.all %}d-none{% endif %}">
         <div class="table-responsive">
             <table class="table align-middle">
                 <thead class="table-light">
@@ -21,7 +21,7 @@
                 </thead>
                 <tbody>
                     {% for item in cart.items.all %}
-                        <tr>
+                        <tr data-item-row="{{ item.id }}">
                             <td>
                                 <div class="d-flex align-items-center">
                                     {% if item.product.image %}
@@ -35,7 +35,7 @@
                             </td>
                             <td>{{ item.product.price }} ₽</td>
                             <td>
-                                <form action="{% url 'cart:cart_update' item.id %}" method="post" class="d-flex gap-2">
+                                <form action="{% url 'cart:cart_update' item.id %}" method="post" class="d-flex gap-2 cart-update-form">
                                     {% csrf_token %}
                                     <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.product.stock }}" class="form-control form-control-sm">
                                     <button type="submit" class="btn btn-sm btn-outline-primary" title="Обновить">
@@ -43,9 +43,9 @@
                                     </button>
                                 </form>
                             </td>
-                            <td class="fw-bold">{{ item.total_price }} ₽</td>
+                            <td class="fw-bold"><span class="item-total-price">{{ item.total_price }}</span> ₽</td>
                             <td>
-                                <form action="{% url 'cart:cart_remove' item.id %}" method="post">
+                                <form action="{% url 'cart:cart_remove' item.id %}" method="post" class="cart-remove-form">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-sm btn-outline-danger" title="Удалить">
                                         {% bs_icon 'trash' %}
@@ -63,15 +63,15 @@
                 {% bs_icon 'arrow-left' extra_classes='me-1' %}Продолжить покупки
             </a>
             <div class="text-end">
-                <p class="mb-1 text-muted">Всего товаров: <strong>{{ cart.total_quantity }} шт.</strong></p>
-                <h4 class="mb-0">Итого: {{ cart.total_price }} ₽</h4>
+                <p class="mb-1 text-muted">Всего товаров: <strong><span id="cart-total-quantity">{{ cart.total_quantity }}</span> шт.</strong></p>
+                <h4 class="mb-0">Итого: <span id="cart-total-price">{{ cart.total_price }}</span> ₽</h4>
             </div>
         </div>
-    {% else %}
-        <div class="alert alert-info d-flex align-items-center justify-content-between">
-            <span>Ваша корзина пока пуста.</span>
-            <a href="{% url 'shop:product_list' %}" class="btn btn-primary btn-sm">Перейти в каталог</a>
-        </div>
-    {% endif %}
+    </div>
+
+    <div id="empty-cart-alert" class="alert alert-info d-flex align-items-center justify-content-between {% if cart.items.all %}d-none{% endif %}">
+        <span>Ваша корзина пока пуста.</span>
+        <a href="{% url 'shop:product_list' %}" class="btn btn-primary btn-sm">Перейти в каталог</a>
+    </div>
 </div>
 {% endblock page_content %}
